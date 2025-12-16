@@ -22,9 +22,9 @@ const problemSchema = new mongoose.Schema(
     },
     slug: {
       type: String,
-      required: true,
       unique: true,
       lowercase: true,
+      sparse: true,
     },
     description: {
       type: String,
@@ -103,7 +103,7 @@ const problemSchema = new mongoose.Schema(
   }
 );
 problemSchema.pre("save", function (next) {
-  if (this.isModified("title")) {
+  if (this.isModified("title") || !this.slug) {
     this.slug = this.title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")

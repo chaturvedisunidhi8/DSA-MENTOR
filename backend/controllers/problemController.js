@@ -76,19 +76,33 @@ exports.createProblem = async (req, res) => {
       ...req.body,
       createdBy: req.user.id,
     };
+    
     const problem = await Problem.create(problemData);
+    
     res.status(201).json({
       success: true,
       message: "Problem created successfully",
       data: problem,
     });
   } catch (error) {
+    console.error("Create problem error:", error);
+    
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
         message: "A problem with this title already exists",
       });
     }
+    
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: messages,
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: "Error creating problem",

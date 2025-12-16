@@ -7,6 +7,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [recentProblems, setRecentProblems] = useState([]);
   useEffect(() => {
     fetchDashboardData();
@@ -14,10 +15,12 @@ const HomePage = () => {
   }, []);
   const fetchDashboardData = async () => {
     try {
+      setError(null);
       const { data } = await api.get("/dashboard/client");
       setDashboardData(data.data);
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
+      setError(error.response?.data?.message || "Failed to load dashboard data. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -33,19 +36,33 @@ const HomePage = () => {
   if (loading) {
     return <div className="loading">Loading your dashboard...</div>;
   }
+
+  if (error) {
+    return (
+      <div className="page-content">
+        <div className="error-state">
+          <h2>⚠️ Error Loading Dashboard</h2>
+          <p>{error}</p>
+          <button onClick={fetchDashboardData} className="btn-primary">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="page-content">
       <div className="welcome">
         <h1>Hey {user?.username}! 👋</h1>
         <p>Welcome back to your DSA journey</p>
         <div className="action-buttons">
-          <button className="btn-primary" onClick={() => navigate("/dashboard/practice")}>
+          <button className="btn-primary" onClick={() => navigate("/dashboard/client/practice")}>
             <span>📝</span> Start Practicing
           </button>
-          <button className="btn-secondary" onClick={() => navigate("/dashboard/analytics")}>
+          <button className="btn-secondary" onClick={() => navigate("/dashboard/client/analytics")}>
             <span>📊</span> View Analytics
           </button>
-          <button className="btn-secondary" onClick={() => navigate("/dashboard/mentor")}>
+          <button className="btn-secondary" onClick={() => navigate("/dashboard/client/mentor")}>
             <span>👨‍🏫</span> AI Mentor
           </button>
         </div>

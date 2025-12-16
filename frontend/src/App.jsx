@@ -23,6 +23,7 @@ import ProblemsPage from "./pages/admin/ProblemsPage";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
 import ReportsPage from "./pages/admin/ReportsPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
+import RolesPermissionsPage from "./pages/admin/RolesPermissionsPage";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requiredRole }) => {
@@ -110,6 +111,7 @@ function AppRoutes() {
       >
         <Route index element={<AdminDashboardPage />} />
         <Route path="users" element={<UsersPage />} />
+        <Route path="roles" element={<RolesPermissionsPage />} />
         <Route path="problems" element={<ProblemsPage />} />
         <Route path="analytics" element={<AdminAnalyticsPage />} />
         <Route path="reports" element={<ReportsPage />} />

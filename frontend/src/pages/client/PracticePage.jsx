@@ -4,6 +4,7 @@ import api from "../../utils/api";
 const PracticePage = () => {
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedTopic, setSelectedTopic] = useState("all");
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -14,6 +15,7 @@ const PracticePage = () => {
   const fetchProblems = async () => {
     try {
       setLoading(true);
+      setError(null);
       const params = {};
       if (selectedTopic !== "all") params.topic = selectedTopic;
       if (selectedDifficulty !== "all") params.difficulty = selectedDifficulty;
@@ -21,7 +23,7 @@ const PracticePage = () => {
       setProblems(data.data);
     } catch (error) {
       console.error("Error fetching problems:", error);
-      alert("Failed to fetch problems");
+      setError(error.response?.data?.message || "Failed to load problems. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -35,7 +37,19 @@ const PracticePage = () => {
   if (loading) {
     return <div className="loading">Loading problems...</div>;
   }
-  return (
+  if (error) {
+    return (
+      <div className="practice-page">
+        <div className="error-container">
+          <h2>⚠️ Error Loading Problems</h2>
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()} className="retry-btn">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }  return (
     <div className="page-content">
       <div className="page-header">
         <h1>📝 Practice Problems</h1>

@@ -6,6 +6,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth");
 const dashboardRoutes = require("./routes/dashboard");
 const problemRoutes = require("./routes/problems");
+const rolesRoutes = require("./routes/roles");
 
 // Load environment variables
 dotenv.config();
@@ -38,6 +39,7 @@ if (process.env.NODE_ENV === "development") {
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/problems", problemRoutes);
+app.use("/api/roles", rolesRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

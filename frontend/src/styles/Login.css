@@ -71,10 +71,10 @@
   margin-bottom: 1rem;
   line-height: 1.2;
 }
-var(--text-secondary)
+
 .login-left > p {
   font-size: 1.125rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   margin-bottom: 2rem;
 }
 
@@ -110,45 +110,47 @@ var(--text-secondary)
   display: flex;
 }
 
-.avatar {var(--bg-secondary);
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-left: -10px;
-  border: 2px solid var(--bg-primary)
-  align-items: center;
-  justify-content: center;
-  margin-left: -10px;
-  border: 2px solid #0a0e27;
+  border: 2px solid var(--bg-primary);
 }
 
 .avatar:first-child {
-  margin-left:linear-gradient(135deg, #4ade80, #22d3ee);
+  margin-left: 0;
+}
+
+.badge {
+  background: linear-gradient(135deg, #4ade80, #22d3ee);
   color: white;
   padding: 0.35rem 1rem;
   border-radius: 1rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.875rem;
 }
 
 .login-right {
-  flex: 1;5rem 4rem 4rem;
+  flex: 1;
+  padding: 5rem 4rem 4rem;
   background: var(--bg-secondary);
   display: flex;
   flex-direction: column;
   justify-content: center;
   max-width: 500px;
-  border-left: 1px solid var(--border-color) center;
-  max-width: 500px;
+  border-left: 1px solid var(--border-color);
 }
 
 .tabs {
   display: flex;
-  gap: 1rem;var(--border-color);
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid var(--border-color);
 }
 
 .tabs button {
@@ -173,9 +175,7 @@ var(--text-secondary)
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(135deg, #4ade80, #22d3ee)
-  height: 2px;
-  background: #4ade80;
+  background: linear-gradient(135deg, #4ade80, #22d3ee);
 }
 
 form {
@@ -189,7 +189,9 @@ form {
   flex-direction: column;
   gap: 0.5rem;
 }
-var(--text-primary);
+
+.form-group label {
+  color: var(--text-primary);
   font-size: 0.875rem;
   font-weight: 500;
 }
@@ -213,9 +215,7 @@ var(--text-primary);
 .password-hint {
   color: #f59e0b;
   font-size: 0.75rem;
-  margin-top: -0.25rem {
-  outline: none;
-  border-color: #4ade80;
+  margin-top: -0.25rem;
 }
 
 .error-message {
@@ -226,18 +226,28 @@ var(--text-primary);
   font-size: 0.875rem;
 }
 
-.form-optvar(--text-secondary);
+.form-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   cursor: pointer;
 }
 
 .checkbox input {
   cursor: pointer;
-  accent-color: var(--primary-color)
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #94a3linear-gradient(135deg, #4ade80, #22d3ee);
+  accent-color: var(--primary-color);
+}
+
+.login-btn {
+  background: linear-gradient(135deg, #4ade80, #22d3ee);
   color: white;
   border: none;
   padding: 0.875rem;
@@ -250,17 +260,17 @@ var(--text-primary);
 
 .login-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(74, 222, 128, 0.3)
-  padding: 0.875rem;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s;
+  box-shadow: 0 8px 20px rgba(74, 222, 128, 0.3);
 }
 
-.login-btn:hover:not(:disabled) {
-  backgrovar(--text-secondary);
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.divider {
+  text-align: center;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   position: relative;
 }
@@ -272,19 +282,19 @@ var(--text-primary);
   top: 50%;
   width: 40%;
   height: 1px;
-  background: var(--border-color)
+  background: var(--border-color);
 }
 
-.divider::before,
-.divider::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 40%;
-  height: 1px;
-  background: #334155;
+.divider::before {
+  left: 0;
 }
-var(--bg-tertiary);
+
+.divider::after {
+  right: 0;
+}
+
+.google-btn {
+  background: var(--bg-tertiary);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
   padding: 0.875rem;
@@ -301,17 +311,18 @@ var(--bg-tertiary);
 
 .google-btn:hover {
   background: var(--bg-secondary);
-  border-color: var(--primary-color)
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  transition: background 0.3s;
+  border-color: var(--primary-color);
 }
 
-.google-btn:hover {
-  backgrovar(--text-secondary);
+.google-icon {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #ea4335;
+}
+
+.terms {
+  text-align: center;
+  color: var(--text-secondary);
   font-size: 0.75rem;
 }
 
@@ -338,17 +349,6 @@ var(--bg-tertiary);
 
   .theme-toggle-login {
     top: 1rem;
-    right: 1rem
-  font-size: 0.75rem;
-}
-
-@media (max-width: 1024px) {
-  .login-container {
-    flex-direction: column;
-  }
-
-  .login-left,
-  .login-right {
-    max-width: 100%;
+    right: 1rem;
   }
 }
