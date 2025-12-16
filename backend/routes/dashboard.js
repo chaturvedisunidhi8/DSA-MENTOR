@@ -104,4 +104,60 @@ router.get(
   }
 );
 
+// Public statistics - no authentication required
+router.get("/public-stats", async (req, res) => {
+  try {
+    const Problem = require("../models/Problem");
+
+    // Get total problems count
+    const totalProblems = await Problem.countDocuments({ isActive: true });
+
+    // Get unique topics count
+    const topicsResult = await Problem.aggregate([
+      { $match: { isActive: true } },
+      { $unwind: "$topics" },
+      { $group: { _id: "$topics" } },
+      { $count: "total" },
+    ]);
+    const topics = topicsResult.length > 0 ? topicsResult[0].total : 0;
+
+    // Get difficulty distribution
+    const difficultyStats = await Problem.aggregate([
+      { $match: { isActive: true } },
+      {
+        $group: {
+          _id: "$difficulty",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const difficulties = {
+      easy: 0,
+      medium: 0,
+      hard: 0,
+    };
+
+    difficultyStats.forEach((stat) => {
+      if (stat._id === "Easy") difficulties.easy = stat.count;
+      if (stat._id === "Medium") difficulties.medium = stat.count;
+      if (stat._id === "Hard") difficulties.hard = stat.count;
+    });
+
+    res.status(200).json({
+      success: true,
+      totalProblems,
+      topics,
+      difficulties,
+    });
+  } catch (error) {
+    console.error("Public stats error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching public statistics",
+      error: error.message,
+    });
+  }
+});
+
 module.exports = router;

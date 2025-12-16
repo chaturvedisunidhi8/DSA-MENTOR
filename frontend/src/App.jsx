@@ -4,6 +4,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import Login from "./components/Login";
 import ClientDashboard from "./components/ClientDashboard";
 import SuperAdminDashboard from "./components/SuperAdminDashboard";
+import LandingPage from "./pages/LandingPage";
 import useAuth from "./hooks/useAuth";
 
 // Client Pages
@@ -32,15 +33,15 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (requiredRole && user?.role !== requiredRole) {
     // If user is not the required role, redirect to their appropriate dashboard
     if (user?.role === "superadmin") {
-      return <Navigate to="/superadmin/dashboard" replace />;
+      return <Navigate to="/dashboard/admin" replace />;
     }
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/dashboard/client" replace />;
   }
 
   return children;
@@ -56,9 +57,9 @@ const PublicRoute = ({ children }) => {
 
   if (isAuthenticated) {
     if (user?.role === "superadmin") {
-      return <Navigate to="/superadmin/dashboard" replace />;
+      return <Navigate to="/dashboard/admin" replace />;
     }
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/dashboard/client" replace />;
   }
 
   return children;
@@ -67,6 +68,10 @@ const PublicRoute = ({ children }) => {
 function AppRoutes() {
   return (
     <Routes>
+      {/* Public Landing Page */}
+      <Route path="/" element={<LandingPage />} />
+      
+      {/* Login Route */}
       <Route
         path="/login"
         element={
@@ -75,8 +80,10 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+      
+      {/* Client Dashboard Routes */}
       <Route
-        path="/dashboard"
+        path="/dashboard/client"
         element={
           <ProtectedRoute>
             <ClientDashboard />
@@ -91,8 +98,10 @@ function AppRoutes() {
         <Route path="achievements" element={<AchievePage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
+      
+      {/* Admin Dashboard Routes */}
       <Route
-        path="/superadmin/dashboard"
+        path="/dashboard/admin"
         element={
           <ProtectedRoute requiredRole="superadmin">
             <SuperAdminDashboard />
@@ -106,8 +115,13 @@ function AppRoutes() {
         <Route path="reports" element={<ReportsPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
       </Route>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      
+      {/* Legacy route redirects */}
+      <Route path="/dashboard" element={<Navigate to="/dashboard/client" replace />} />
+      <Route path="/superadmin/dashboard" element={<Navigate to="/dashboard/admin" replace />} />
+      
+      {/* Catch all redirect */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import ThemeToggle from "./ThemeToggle";
 import "../styles/Login.css";
 
 const Login = () => {
@@ -49,9 +50,9 @@ const Login = () => {
       if (result.success) {
         // Redirect based on role
         if (result.user.role === "superadmin") {
-          navigate("/superadmin/dashboard");
+          navigate("/dashboard/admin");
         } else {
-          navigate("/dashboard");
+          navigate("/dashboard/client");
         }
       } else {
         setError(result.message);
@@ -66,6 +67,12 @@ const Login = () => {
 
   return (
     <div className="login-container">
+      <button className="back-to-landing" onClick={() => navigate('/')}>
+        ← Back to Home
+      </button>
+      <div className="theme-toggle-login">
+        <ThemeToggle />
+      </div>
       <div className="login-left">
         <div className="branding">
           <div className="icon">{"</>"}</div>
@@ -93,7 +100,7 @@ const Login = () => {
             <div className="avatar">👤</div>
             <div className="avatar">👤</div>
           </div>
-          <span className="badge">+1 trusted by peers</span>
+          <span className="badge">Join 1000+ developers</span>
         </div>
       </div>
 
@@ -157,6 +164,9 @@ const Login = () => {
               minLength={6}
               placeholder="Enter password (min 6 characters)"
             />
+            {!isLogin && formData.password && formData.password.length < 6 && (
+              <small className="password-hint">Password must be at least 6 characters</small>
+            )}
           </div>
 
           {error && <div className="error-message">{error}</div>}
