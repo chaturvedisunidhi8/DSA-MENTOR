@@ -1,29 +1,12 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
 const dotenv = require("dotenv");
 const path = require("path");
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, "../.env") });
 
-// User schema (simplified)
-const userSchema = new mongoose.Schema(
-  {
-    username: String,
-    email: String,
-    password: String,
-    role: String,
-    problemsSolved: { type: Number, default: 0 },
-    accuracy: { type: Number, default: 0 },
-    currentLevel: { type: String, default: "Expert" },
-    streak: { type: Number, default: 0 },
-    focusAreas: { type: [String], default: [] },
-    lastActive: { type: Date, default: Date.now },
-  },
-  { timestamps: true }
-);
-
-const User = mongoose.model("User", userSchema);
+// Import the actual User model with password hashing
+const User = require("../models/User");
 
 async function createSuperadmin() {
   try {
@@ -50,22 +33,18 @@ async function createSuperadmin() {
       console.log("⚠️  Superadmin already exists with email:", email);
       console.log("Updating password...");
 
-      // Update password
-      const hashedPassword = await bcrypt.hash(password, 10);
-      existingAdmin.password = hashedPassword;
+      // Update password (User model pre-save hook will hash it)
+      existingAdmin.password = password;
       existingAdmin.role = "superadmin";
       await existingAdmin.save();
 
       console.log("✅ Superadmin password updated successfully!");
     } else {
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Create superadmin
+      // Create superadmin (User model pre-save hook will hash password)
       await User.create({
         username: username,
         email: email,
-        password: hashedPassword,
+        password: password,
         role: "superadmin",
         problemsSolved: 0,
         accuracy: 100,
