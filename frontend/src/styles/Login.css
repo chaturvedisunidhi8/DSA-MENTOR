@@ -43,7 +43,7 @@
   flex-direction: column;
   justify-content: center;
   color: var(--text-primary);
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.05), rgba(34, 211, 238, 0.05));
+  background: linear-gradient(135deg, var(--accent-10), var(--accent-10));
 }
 
 .branding {
@@ -55,7 +55,7 @@
 
 .branding .icon {
   font-size: 1.5rem;
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -92,7 +92,7 @@
 }
 
 .check-icon {
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -127,7 +127,7 @@
 }
 
 .badge {
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  background: var(--gradient-primary);
   color: white;
   padding: 0.35rem 1rem;
   border-radius: 1rem;
@@ -175,7 +175,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  background: var(--gradient-primary);
 }
 
 form {
@@ -209,17 +209,17 @@ form {
 .form-group input:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
+  box-shadow: 0 0 0 3px var(--accent-10);
 }
 
 .password-hint {
-  color: #f59e0b;
+  color: var(--warning-color);
   font-size: 0.75rem;
   margin-top: -0.25rem;
 }
 
 .error-message {
-  background: #dc2626;
+  background: var(--danger-alt);
   color: white;
   padding: 0.75rem;
   border-radius: 0.5rem;
@@ -247,7 +247,7 @@ form {
 }
 
 .login-btn {
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  background: var(--gradient-primary);
   color: white;
   border: none;
   padding: 0.875rem;
@@ -260,7 +260,7 @@ form {
 
 .login-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(74, 222, 128, 0.3);
+  box-shadow: var(--shadow-primary);
 }
 
 .login-btn:disabled {
@@ -317,7 +317,7 @@ form {
 .google-icon {
   font-size: 1.25rem;
   font-weight: bold;
-  color: #ea4335;
+  color: var(--danger-color);
 }
 
 .terms {

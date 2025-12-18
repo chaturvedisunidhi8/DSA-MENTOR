@@ -30,6 +30,21 @@ api.interceptors.request.use(
 );
 
 // Response interceptor to handle token refresh
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+
+  failedQueue = [];
+};
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -37,7 +52,22 @@ api.interceptors.response.use(
 
     // If access token expired, try to refresh
     if (error.response?.status === 403 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // If already refreshing, queue this request
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
         console.log("Access token expired, refreshing...");
@@ -49,12 +79,18 @@ api.interceptors.response.use(
 
         const { accessToken } = data.data;
         localStorage.setItem("accessToken", accessToken);
+        
+        isRefreshing = false;
+        processQueue(null, accessToken);
 
         // Retry original request with new token
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
+        isRefreshing = false;
+        processQueue(refreshError, null);
+        
         // Refresh failed, redirect to login
         localStorage.removeItem("accessToken");
         localStorage.removeItem("user");

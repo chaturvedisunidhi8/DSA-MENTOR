@@ -16,7 +16,7 @@
   background: rgba(10, 14, 39, 0.8);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-color);
-  z-index: 1000;
+  z-index: var(--z-sticky);
   padding: 0.4rem 2rem;
   transform: translateY(0);
   transition: transform 0.3s ease-in-out;
@@ -51,7 +51,7 @@
 }
 
 .logo-text {
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -76,7 +76,7 @@
 }
 
 .nav-login-btn {
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  background: var(--gradient-primary);
   color: white;
   border: none;
   padding: 0.5rem 1.2rem;
@@ -89,7 +89,7 @@
 
 .nav-login-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(74, 222, 128, 0.3);
+  box-shadow: var(--shadow-primary);
 }
 
 /* Hero Section */
@@ -129,7 +129,7 @@
 }
 
 .hero-gradient-text {
-  background: linear-gradient(135deg, #4ade80, #22d3ee, #a78bfa);
+  background: var(--gradient-accent);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -149,7 +149,7 @@
 }
 
 .cta-primary {
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  background: var(--gradient-primary);
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -165,7 +165,7 @@
 
 .cta-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(74, 222, 128, 0.4);
+  box-shadow: 0 10px 30px var(--accent-30);
 }
 
 .cta-arrow {
@@ -190,7 +190,7 @@
 
 .cta-secondary:hover {
   border-color: var(--primary-color);
-  background: rgba(74, 222, 128, 0.1);
+  background: var(--accent-10);
 }
 
 .hero-stats {
@@ -205,7 +205,7 @@
 .stat-number {
   font-size: 2.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -240,7 +240,7 @@
   border: 1px solid var(--border-color);
   border-radius: 1rem;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-deep);
 }
 
 .window-header {
@@ -265,19 +265,19 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #64748b;
+  background: var(--text-tertiary);
 }
 
 .window-dots span:nth-child(1) {
-  background: #ef4444;
+  background: var(--danger-color);
 }
 
 .window-dots span:nth-child(2) {
-  background: #f59e0b;
+  background: var(--warning-color);
 }
 
 .window-dots span:nth-child(3) {
-  background: #10b981;
+  background: var(--success-alt);
 }
 
 .window-title {
@@ -337,7 +337,7 @@
 
 .feature-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 40px rgba(74, 222, 128, 0.2);
+  box-shadow: 0 10px 40px var(--accent-20);
   border-color: var(--primary-color);
 }
 
@@ -389,7 +389,7 @@
 }
 
 .difficulty-card.easy {
-  border-color: #10b981;
+  border-color: var(--success-alt);
 }
 
 .difficulty-card.easy:hover {
@@ -397,19 +397,19 @@
 }
 
 .difficulty-card.medium {
-  border-color: #f59e0b;
+  border-color: var(--warning-color);
 }
 
 .difficulty-card.medium:hover {
-  box-shadow: 0 10px 40px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 10px 40px var(--difficulty-medium-border);
 }
 
 .difficulty-card.hard {
-  border-color: #ef4444;
+  border-color: var(--danger-color);
 }
 
 .difficulty-card.hard:hover {
-  box-shadow: 0 10px 40px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 10px 40px var(--difficulty-hard-border);
 }
 
 .difficulty-label {
@@ -421,15 +421,15 @@
 }
 
 .difficulty-card.easy .difficulty-label {
-  color: #10b981;
+  color: var(--success-alt);
 }
 
 .difficulty-card.medium .difficulty-label {
-  color: #f59e0b;
+  color: var(--warning-color);
 }
 
 .difficulty-card.hard .difficulty-label {
-  color: #ef4444;
+  color: var(--danger-color);
 }
 
 .difficulty-count {
@@ -474,7 +474,7 @@
 }
 
 .point-icon {
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  background: var(--gradient-primary);
   color: white;
   width: 24px;
   height: 24px;
@@ -517,7 +517,7 @@
 .showcase-number {
   font-size: 3rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -535,7 +535,7 @@
   margin: 4rem 2rem;
   max-width: 1400px;
   margin: 4rem auto;
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.1), rgba(34, 211, 238, 0.1));
+  background: linear-gradient(135deg, var(--accent-10), var(--accent-10));
   border: 1px solid var(--border-color);
   border-radius: 2rem;
 }
@@ -557,7 +557,7 @@
 }
 
 .cta-large-btn {
-  background: linear-gradient(135deg, #4ade80, #22d3ee);
+  background: var(--gradient-primary);
   color: white;
   border: none;
   padding: 1.25rem 3rem;
@@ -573,7 +573,7 @@
 
 .cta-large-btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 15px 40px rgba(74, 222, 128, 0.4);
+  box-shadow: 0 15px 40px var(--accent-30);
 }
 
 .btn-arrow {

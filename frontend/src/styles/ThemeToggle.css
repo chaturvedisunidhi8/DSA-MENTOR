@@ -1,6 +1,6 @@
 .theme-toggle-btn {
   background: transparent;
-  border: 2px solid var(--border-color, #334155);
+  border: 2px solid var(--border-color);
   width: 45px;
   height: 45px;
   border-radius: 50%;
@@ -12,10 +12,11 @@
   padding: 0;
   margin-left: 1rem;
 }
+
 .theme-toggle-btn:hover {
-  background: var(--hover-bg, rgba(74, 222, 128, 0.1));
+  background: var(--hover-bg);
   transform: scale(1.1);
-  border-color: var(--accent-color, #4ade80);
+  border-color: var(--accent-color);
 }
 .theme-toggle-btn:active {
   transform: scale(0.95);
