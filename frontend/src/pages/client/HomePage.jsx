@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import api from "../../utils/api";
+import { SkeletonStats, SkeletonCard, PageLoader } from "../../components/ui/Loading";
+import Button from "../../components/ui/Button";
+
 const HomePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -9,9 +12,11 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [recentProblems, setRecentProblems] = useState([]);
+  const [interviewStats, setInterviewStats] = useState(null);
   useEffect(() => {
     fetchDashboardData();
     fetchRecentProblems();
+    fetchInterviewStats();
   }, []);
   const fetchDashboardData = async () => {
     try {
@@ -33,8 +38,25 @@ const HomePage = () => {
       console.error("Failed to fetch recent problems:", error);
     }
   };
+
+  const fetchInterviewStats = async () => {
+    try {
+      const { data } = await api.get("/interview/stats");
+      setInterviewStats(data.stats);
+    } catch (error) {
+      console.error("Failed to fetch interview stats:", error);
+    }
+  };
   if (loading) {
-    return <div className="loading">Loading your dashboard...</div>;
+    return (
+      <div className="page-content">
+        <h1>Welcome back, {user?.username}! 👋</h1>
+        <SkeletonStats count={4} />
+        <div style={{ marginTop: '2rem' }}>
+          <SkeletonCard count={2} />
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -43,9 +65,9 @@ const HomePage = () => {
         <div className="error-state">
           <h2>⚠️ Error Loading Dashboard</h2>
           <p>{error}</p>
-          <button onClick={fetchDashboardData} className="btn-primary">
+          <Button onClick={fetchDashboardData} variant="primary">
             Retry
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -59,6 +81,9 @@ const HomePage = () => {
           <button className="btn-primary" onClick={() => navigate("/dashboard/client/practice")}>
             <span>📝</span> Start Practicing
           </button>
+          <button className="btn-secondary" onClick={() => navigate("/dashboard/client/interview")}>
+            <span>🎤</span> AI Interview
+          </button>
           <button className="btn-secondary" onClick={() => navigate("/dashboard/client/analytics")}>
             <span>📊</span> View Analytics
           </button>
@@ -67,6 +92,28 @@ const HomePage = () => {
           </button>
         </div>
       </div>
+
+      {/* AI Interview Section */}
+      <div className="interview-banner">
+        <div className="interview-content">
+          <h2>🎤 Ready for an AI Interview?</h2>
+          <p>Practice real interview scenarios with our AI interviewer</p>
+          {interviewStats && interviewStats.totalInterviews > 0 && (
+            <div className="interview-quick-stats">
+              <span>📊 {interviewStats.totalInterviews} interviews taken</span>
+              <span>⭐ {interviewStats.averageScore}% avg score</span>
+              <span>🏆 {interviewStats.bestScore}% best score</span>
+            </div>
+          )}
+          <button 
+            className="btn-interview" 
+            onClick={() => navigate("/dashboard/client/interview")}
+          >
+            Start AI Interview →
+          </button>
+        </div>
+      </div>
+
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-icon">✅</div>

@@ -103,4 +103,38 @@ api.interceptors.response.use(
   }
 );
 
+// Profile API functions
+export const profileAPI = {
+  // Update user profile
+  updateProfile: async (profileData) => {
+    const response = await api.put("/auth/profile", profileData);
+    return response.data;
+  },
+
+  // Upload resume
+  uploadResume: async (file) => {
+    const formData = new FormData();
+    formData.append("resume", file);
+
+    const response = await api.post("/auth/profile/resume", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+
+  // Delete resume
+  deleteResume: async () => {
+    const response = await api.delete("/auth/profile/resume");
+    return response.data;
+  },
+
+  // Get profile
+  getProfile: async () => {
+    const response = await api.get("/auth/profile");
+    return response.data;
+  },
+};
+
 export default api;

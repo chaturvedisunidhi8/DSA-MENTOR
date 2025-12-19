@@ -4,6 +4,9 @@ const {
   generateRefreshToken,
   verifyRefreshToken,
 } = require("../utils/tokenUtils");
+const { parseResume } = require("../utils/resumeParser");
+const fs = require("fs");
+const path = require("path");
 
 // Register new user
 const register = async (req, res) => {
@@ -359,6 +362,212 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Update own profile (for authenticated users)
+const updateOwnProfile = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { username, email, bio, phone, github, linkedin, skills, experience, education } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if username or email is being changed and already exists
+    if (username && username !== user.username) {
+      const existingUser = await User.findOne({ username });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Username already taken",
+        });
+      }
+      user.username = username;
+    }
+
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already in use",
+        });
+      }
+      user.email = email;
+    }
+
+    // Update profile fields
+    if (bio !== undefined) user.bio = bio;
+    if (phone !== undefined) user.phone = phone;
+    if (github !== undefined) user.github = github;
+    if (linkedin !== undefined) user.linkedin = linkedin;
+    if (skills !== undefined) user.skills = Array.isArray(skills) ? skills : [];
+    if (experience !== undefined) user.experience = experience;
+    if (education !== undefined) user.education = education;
+
+    await user.save();
+
+    // Return user without sensitive data
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    delete userResponse.refreshToken;
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: userResponse,
+    });
+  } catch (error) {
+    console.error("Update own profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error updating profile",
+      error: error.message,
+    });
+  }
+};
+
+// Upload and parse resume
+const uploadResume = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      // Delete uploaded file if user not found
+      fs.unlinkSync(req.file.path);
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Delete old resume file if exists
+    if (user.resumeUrl) {
+      const oldFilePath = path.join(__dirname, "..", user.resumeUrl);
+      if (fs.existsSync(oldFilePath)) {
+        fs.unlinkSync(oldFilePath);
+      }
+    }
+
+    // Parse the resume
+    const parseResult = await parseResume(req.file.path);
+
+    // Update user with resume data
+    user.resumeUrl = `/uploads/resumes/${req.file.filename}`;
+    user.resumeUploadedAt = new Date();
+
+    if (parseResult.success && parseResult.data) {
+      // Auto-populate fields from resume if they're empty
+      const { data } = parseResult;
+      
+      if (!user.phone && data.phone) user.phone = data.phone;
+      if (!user.github && data.github) user.github = data.github;
+      if (!user.linkedin && data.linkedin) user.linkedin = data.linkedin;
+      if (!user.experience && data.experience) user.experience = data.experience;
+      if (!user.education && data.education) user.education = data.education;
+      
+      // Merge skills
+      if (data.skills && data.skills.length > 0) {
+        const existingSkills = new Set(user.skills);
+        data.skills.forEach(skill => existingSkills.add(skill));
+        user.skills = Array.from(existingSkills);
+      }
+
+      user.resumeData = {
+        ...data,
+        rawText: parseResult.rawText,
+        parsedAt: new Date(),
+      };
+    }
+
+    await user.save();
+
+    // Return user without sensitive data
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    delete userResponse.refreshToken;
+
+    res.json({
+      success: true,
+      message: "Resume uploaded and parsed successfully",
+      user: userResponse,
+      parsedData: parseResult.data,
+    });
+  } catch (error) {
+    console.error("Upload resume error:", error);
+    
+    // Delete uploaded file on error
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Server error uploading resume",
+      error: error.message,
+    });
+  }
+};
+
+// Delete resume
+const deleteResume = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Delete resume file if exists
+    if (user.resumeUrl) {
+      const filePath = path.join(__dirname, "..", user.resumeUrl);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    // Clear resume data from user
+    user.resumeUrl = null;
+    user.resumeData = null;
+    user.resumeUploadedAt = null;
+
+    await user.save();
+
+    // Return user without sensitive data
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    delete userResponse.refreshToken;
+
+    res.json({
+      success: true,
+      message: "Resume deleted successfully",
+      user: userResponse,
+    });
+  } catch (error) {
+    console.error("Delete resume error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error deleting resume",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -367,4 +576,7 @@ module.exports = {
   updateUser,
   deleteUser,
   getProfile,
+  updateOwnProfile,
+  uploadResume,
+  deleteResume,
 };

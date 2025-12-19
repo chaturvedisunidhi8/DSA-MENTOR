@@ -58,6 +58,52 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    // Profile fields
+    bio: {
+      type: String,
+      default: "",
+      maxlength: [500, "Bio must be less than 500 characters"],
+    },
+    phone: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    github: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    linkedin: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    skills: {
+      type: [String],
+      default: [],
+    },
+    experience: {
+      type: String,
+      default: "",
+    },
+    education: {
+      type: String,
+      default: "",
+    },
+    // Resume fields
+    resumeUrl: {
+      type: String,
+      default: null,
+    },
+    resumeData: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+    resumeUploadedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

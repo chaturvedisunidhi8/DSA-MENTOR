@@ -12,6 +12,9 @@ import HomePage from "./pages/client/HomePage";
 import PracticePage from "./pages/client/PracticePage";
 import ProblemDetailPage from "./pages/client/ProblemDetailPage";
 import MentorPage from "./pages/client/MentorPage";
+import InterviewSetupPage from "./pages/client/InterviewSetupPage";
+import InterviewSessionPage from "./pages/client/InterviewSessionPage";
+import InterviewResultsPage from "./pages/client/InterviewResultsPage";
 import AnalyticsPage from "./pages/client/AnalyticsPage";
 import AchievePage from "./pages/client/AchievePage";
 import SettingsPage from "./pages/client/SettingsPage";
@@ -95,6 +98,9 @@ function AppRoutes() {
         <Route path="practice" element={<PracticePage />} />
         <Route path="practice/:slug" element={<ProblemDetailPage />} />
         <Route path="mentor" element={<MentorPage />} />
+        <Route path="interview" element={<InterviewSetupPage />} />
+        <Route path="interview/session/:sessionId" element={<InterviewSessionPage />} />
+        <Route path="interview/results/:sessionId" element={<InterviewResultsPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="achievements" element={<AchievePage />} />
         <Route path="settings" element={<SettingsPage />} />
@@ -130,7 +136,12 @@ function AppRoutes() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
       <ThemeProvider>
         <AuthProvider>
           <AppRoutes />

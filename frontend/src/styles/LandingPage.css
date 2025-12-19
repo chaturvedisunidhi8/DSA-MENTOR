@@ -753,3 +753,154 @@
     padding: 0.75rem 1.25rem;
   }
 }
+
+/* AI Interview Highlight Styles */
+.highlight-card {
+  position: relative;
+  background: var(--bg-secondary);
+  border: 2px solid var(--primary-color) !important;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.15), inset 0 0 60px rgba(102, 126, 234, 0.05);
+  transform: scale(1.02);
+}
+
+.highlight-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+  border-radius: 1rem;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.highlight-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme="light"] .highlight-card {
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.12), inset 0 0 60px rgba(102, 126, 234, 0.03);
+}
+
+[data-theme="light"] .highlight-card::before {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.04) 0%, rgba(118, 75, 162, 0.04) 100%);
+}
+
+.highlight-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 48px rgba(102, 126, 234, 0.25), inset 0 0 80px rgba(102, 126, 234, 0.08);
+  border-color: #764ba2;
+}
+
+.feature-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.highlight-stat {
+  position: relative;
+  background: var(--bg-secondary);
+  border: 2px solid var(--primary-color);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
+  animation: pulse-glow 2s ease-in-out infinite;
+  padding: 1.5rem;
+  border-radius: 1rem;
+}
+
+.highlight-stat::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-radius: 1rem;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.highlight-stat > * {
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme="light"] .highlight-stat {
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.12);
+}
+
+[data-theme="light"] .highlight-stat::before {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 24px rgba(102, 126, 234, 0.4);
+  }
+}
+
+.highlight-point {
+  position: relative;
+  background: var(--bg-secondary);
+  border-left: 4px solid var(--primary-color);
+  padding: 1.25rem;
+  border-radius: 8px;
+  margin-left: -1rem;
+  padding-left: 2rem;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+  transition: all 0.3s ease;
+}
+
+.highlight-point::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(102, 126, 234, 0.06) 0%, transparent 100%);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.highlight-point:hover {
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
+  transform: translateX(5px);
+}
+
+.highlight-point > * {
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme="light"] .highlight-point {
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
+}
+
+[data-theme="light"] .highlight-point::before {
+  background: linear-gradient(90deg, rgba(102, 126, 234, 0.03) 0%, transparent 100%);
+}
+
+[data-theme="light"] .highlight-point:hover {
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.12);
+}
+
+.highlight-point .point-icon {
+  font-size: 1.5rem;
+}

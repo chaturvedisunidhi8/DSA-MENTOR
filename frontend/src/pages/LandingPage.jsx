@@ -115,8 +115,8 @@ function LandingPage() {
                 <div className="stat-label">Topics</div>
               </div>
               <div className="stat-item">
-                <div className="stat-number">AI</div>
-                <div className="stat-label">Mentor</div>
+                <div className="stat-number">🎤 AI</div>
+                <div className="stat-label">Interviews</div>
               </div>
             </div>
           </div>
@@ -177,6 +177,14 @@ function LandingPage() {
             <p className="feature-description">
               Get instant help with hints, explanations, and optimizations. 
               Your personal coding assistant available 24/7.
+            </p>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon">🎤</div>
+            <h3 className="feature-title">AI Mock Interviews</h3>
+            <p className="feature-description">
+              Practice real coding interviews with our AI interviewer. Get instant feedback, 
+              hints, and comprehensive performance analysis.
             </p>
           </div>
           <div className="feature-card">
@@ -263,6 +271,12 @@ function LandingPage() {
                 <div className="point-icon">✓</div>
                 <div className="point-text">
                   <strong>Detailed Solutions:</strong> Learn optimal approaches with step-by-step explanations
+                </div>
+              </div>
+              <div className="about-point">
+                <div className="point-icon">🎤</div>
+                <div className="point-text">
+                  <strong>AI Mock Interviews:</strong> Practice with AI interviewer and get instant feedback on your performance
                 </div>
               </div>
               <div className="about-point">

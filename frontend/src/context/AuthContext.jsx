@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-import api from "../utils/api";
+import api, { profileAPI } from "../utils/api";
 
 export const AuthContext = createContext();
 
@@ -101,6 +101,70 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (profileData) => {
+    try {
+      const response = await profileAPI.updateProfile(profileData);
+      
+      if (response.success) {
+        setUser(response.user);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        return { success: true, user: response.user };
+      }
+      
+      return { success: false, message: response.message };
+    } catch (error) {
+      console.error("Update profile error:", error);
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to update profile",
+      };
+    }
+  };
+
+  const uploadResume = async (file) => {
+    try {
+      const response = await profileAPI.uploadResume(file);
+      
+      if (response.success) {
+        setUser(response.user);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        return { 
+          success: true, 
+          user: response.user,
+          parsedData: response.parsedData 
+        };
+      }
+      
+      return { success: false, message: response.message };
+    } catch (error) {
+      console.error("Upload resume error:", error);
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to upload resume",
+      };
+    }
+  };
+
+  const deleteResume = async () => {
+    try {
+      const response = await profileAPI.deleteResume();
+      
+      if (response.success) {
+        setUser(response.user);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        return { success: true, user: response.user };
+      }
+      
+      return { success: false, message: response.message };
+    } catch (error) {
+      console.error("Delete resume error:", error);
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to delete resume",
+      };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -110,6 +174,9 @@ export const AuthProvider = ({ children }) => {
         login,
         signup,
         logout,
+        updateProfile,
+        uploadResume,
+        deleteResume,
       }}
     >
       {children}

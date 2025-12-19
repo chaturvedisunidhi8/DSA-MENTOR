@@ -8,9 +8,13 @@ const {
   getProfile,
   updateUser,
   deleteUser,
+  updateOwnProfile,
+  uploadResume,
+  deleteResume,
 } = require("../controllers/authController");
 const authenticate = require("../middleware/auth");
 const checkRole = require("../middleware/roleCheck");
+const upload = require("../middleware/upload");
 
 // Public routes
 router.post("/register", register);
@@ -20,6 +24,9 @@ router.post("/refresh", refreshAccessToken);
 // Protected routes
 router.post("/logout", authenticate, logout);
 router.get("/profile", authenticate, getProfile);
+router.put("/profile", authenticate, updateOwnProfile);
+router.post("/profile/resume", authenticate, upload.single("resume"), uploadResume);
+router.delete("/profile/resume", authenticate, deleteResume);
 
 // Admin routes for user management
 router.put("/users/:id", authenticate, checkRole("superadmin"), updateUser);

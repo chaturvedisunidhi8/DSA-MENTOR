@@ -1,0 +1,227 @@
+/* ============================================================================
+   MOBILE & RESPONSIVE STYLES
+   ============================================================================ */
+
+/* Hamburger Menu */
+.hamburger-menu {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 28px;
+  height: 22px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1001;
+}
+
+.hamburger-menu span {
+  display: block;
+  height: 3px;
+  width: 100%;
+  background: var(--text-primary);
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-menu:hover span {
+  background: var(--primary);
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 999;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+  .hamburger-menu {
+    display: flex;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+    transition: left 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .sidebar-open {
+    left: 0;
+  }
+
+  .sidebar-overlay {
+    display: block;
+  }
+
+  .main-content {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .header {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .search-bar {
+    flex: 1;
+    max-width: none;
+  }
+
+  .user-info {
+    gap: 0.75rem;
+  }
+
+  .streak {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-wrap: wrap;
+    padding: 0.75rem;
+  }
+
+  .search-bar {
+    order: 3;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .search-bar input {
+    font-size: 0.9rem;
+  }
+
+  .user-info {
+    order: 2;
+    gap: 0.5rem;
+  }
+
+  .logout-btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .page-content {
+    padding: 1rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .quick-actions {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .action-card {
+    padding: 1rem;
+  }
+
+  .interview-banner {
+    padding: 1.5rem;
+  }
+
+  .interview-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .interview-content p {
+    font-size: 1rem;
+  }
+
+  .btn-interview {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 80%;
+    min-width: 80%;
+  }
+
+  .logo {
+    font-size: 1.5rem;
+    padding: 0 1rem;
+  }
+
+  .sidebar nav a {
+    padding: 0.875rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .nav-icon {
+    font-size: 1.1rem;
+  }
+
+  .user-profile {
+    padding: 0.75rem;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Focus Visible Styles for Accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+  }
+  
+  .sidebar,
+  .sidebar-overlay,
+  .hamburger-menu span {
+    transition: none;
+  }
+}

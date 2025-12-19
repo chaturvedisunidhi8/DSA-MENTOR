@@ -54,6 +54,48 @@ const AchievePage = () => {
       progress: 54,
       total: 90,
     },
+    {
+      id: 7,
+      icon: "🎤",
+      title: "Interview Rookie",
+      description: "Complete your first AI interview",
+      unlocked: false,
+      category: "interview",
+    },
+    {
+      id: 8,
+      icon: "🎯",
+      title: "Interview Expert",
+      description: "Score 80%+ in an AI interview",
+      unlocked: false,
+      category: "interview",
+    },
+    {
+      id: 9,
+      icon: "🏆",
+      title: "Interview Master",
+      description: "Complete 10 AI interviews",
+      unlocked: false,
+      progress: 0,
+      total: 10,
+      category: "interview",
+    },
+    {
+      id: 10,
+      icon: "🌟",
+      title: "Perfect Score",
+      description: "Score 100% in an AI interview",
+      unlocked: false,
+      category: "interview",
+    },
+    {
+      id: 11,
+      icon: "💬",
+      title: "Great Communicator",
+      description: "Achieve 90%+ communication score in interview",
+      unlocked: false,
+      category: "interview",
+    },
   ];
 
   const badges = [
@@ -110,8 +152,15 @@ const AchievePage = () => {
         >
           Locked
         </button>
+        <button
+          className={selectedCategory === "interview" ? "active" : ""}
+          onClick={() => setSelectedCategory("interview")}
+        >
+          🎤 Interview
+        </button>
       </div>
-
+if (selectedCategory === "interview") return a.category === "interview";
+            
       <div className="achievements-grid">
         {achievements
           .filter((a) => {

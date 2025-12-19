@@ -2,11 +2,13 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const path = require("path");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth");
 const dashboardRoutes = require("./routes/dashboard");
 const problemRoutes = require("./routes/problems");
 const rolesRoutes = require("./routes/roles");
+const interviewRoutes = require("./routes/interview");
 
 // Load environment variables
 dotenv.config();
@@ -27,6 +29,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Serve uploaded files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // Request logger middleware (development only)
 if (process.env.NODE_ENV === "development") {
   app.use((req, res, next) => {
@@ -40,6 +45,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/problems", problemRoutes);
 app.use("/api/roles", rolesRoutes);
+app.use("/api/interview", interviewRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
