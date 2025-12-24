@@ -128,7 +128,7 @@
 
 .badge {
   background: var(--gradient-primary);
-  color: white;
+  color: var(--bg-primary);
   padding: 0.35rem 1rem;
   border-radius: 1rem;
   font-size: 0.875rem;
@@ -290,7 +290,7 @@ form {
 
 .login-btn {
   background: var(--gradient-primary);
-  color: white;
+  color: var(--bg-primary);
   border: none;
   padding: 0.875rem;
   border-radius: 0.5rem;

@@ -119,4 +119,14 @@ problemSchema.virtual("acceptanceRate").get(function () {
 });
 problemSchema.set("toJSON", { virtuals: true });
 problemSchema.set("toObject", { virtuals: true });
+
+// Indexes for better query performance (crucial for 10k+ users)
+// Note: slug unique index is auto-created
+problemSchema.index({ difficulty: 1 }); // Filter by difficulty
+problemSchema.index({ topics: 1 }); // Filter by topics (array index)
+problemSchema.index({ isActive: 1 }); // Filter active problems
+problemSchema.index({ 'stats.acceptedSubmissions': -1 }); // Sort by popularity
+problemSchema.index({ difficulty: 1, topics: 1, isActive: 1 }); // Compound for complex queries
+problemSchema.index({ createdAt: -1 }); // Sort by creation date
+
 module.exports = mongoose.model("Problem", problemSchema);

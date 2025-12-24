@@ -9,8 +9,13 @@ const ProblemDetailPage = () => {
   const [selectedLanguage, setSelectedLanguage] = useState("javascript");
   const [code, setCode] = useState("");
   const [activeTab, setActiveTab] = useState("description");
+  
   useEffect(() => {
-    fetchProblem();
+    let isMounted = true;
+    if (isMounted && slug) {
+      fetchProblem();
+    }
+    return () => { isMounted = false; };
   }, [slug]);
   const fetchProblem = async () => {
     try {
@@ -99,13 +104,29 @@ const ProblemDetailPage = () => {
       <div className="problem-container">
         <div className="problem-left">
           <div className="problem-header">
-            <button className="back-btn" onClick={() => navigate("/dashboard/practice")}>
+            <button className="back-btn" onClick={() => navigate(-1)}>
               ← Back
             </button>
-            <h1>{problem.title}</h1>
-            <span className={`difficulty-badge ${problem.difficulty.toLowerCase()}`}>
-              {problem.difficulty}
-            </span>
+            <div className="problem-title-group">
+              <h1>{problem.title}</h1>
+              <div className="problem-meta-info">
+                <span className={`difficulty-badge ${problem.difficulty.toLowerCase()}`}>
+                  {problem.difficulty}
+                </span>
+                {problem.acceptanceRate > 0 && (
+                  <span className="acceptance-stat">
+                    <span className="stat-icon">✓</span>
+                    {problem.acceptanceRate}% Acceptance
+                  </span>
+                )}
+                {problem.stats?.totalAttempts > 0 && (
+                  <span className="attempts-stat">
+                    <span className="stat-icon">👥</span>
+                    {problem.stats.totalAttempts} Attempts
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
           <div className="problem-tabs">
             <button
@@ -131,44 +152,57 @@ const ProblemDetailPage = () => {
             {activeTab === "description" && (
               <>
                 <div className="problem-description">
+                  <h3>Problem Description</h3>
                   <p>{problem.description}</p>
                 </div>
-                {problem.inputFormat && (
-                  <div className="problem-section">
-                    <h3>Input Format</h3>
-                    <p>{problem.inputFormat}</p>
-                  </div>
-                )}
-                {problem.outputFormat && (
-                  <div className="problem-section">
-                    <h3>Output Format</h3>
-                    <p>{problem.outputFormat}</p>
-                  </div>
-                )}
+                
+                <div className="problem-formats-grid">
+                  {problem.inputFormat && (
+                    <div className="problem-section format-section">
+                      <h3>📥 Input Format</h3>
+                      <div className="format-content">
+                        <p>{problem.inputFormat}</p>
+                      </div>
+                    </div>
+                  )}
+                  {problem.outputFormat && (
+                    <div className="problem-section format-section">
+                      <h3>📤 Output Format</h3>
+                      <div className="format-content">
+                        <p>{problem.outputFormat}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
                 {problem.constraints && (
                   <div className="problem-section">
-                    <h3>Constraints</h3>
-                    <pre>{problem.constraints}</pre>
+                    <h3>⚠️ Constraints</h3>
+                    <pre className="constraints-box">{problem.constraints}</pre>
                   </div>
                 )}
                 {problem.sampleTestCases && problem.sampleTestCases.length > 0 && (
                   <div className="problem-section">
-                    <h3>Sample Test Cases</h3>
-                    {problem.sampleTestCases.map((testCase, idx) => (
-                      <div key={idx} className="test-case">
-                        <h4>Example {idx + 1}:</h4>
-                        <div className="test-case-content">
-                          <div>
-                            <strong>Input:</strong>
-                            <pre>{testCase.input}</pre>
+                    <h3>📝 Sample Test Cases</h3>
+                    <div className="test-cases-grid">
+                      {problem.sampleTestCases.map((testCase, idx) => (
+                        <div key={idx} className="test-case">
+                          <div className="test-case-header">
+                            <h4>Example {idx + 1}</h4>
                           </div>
-                          <div>
-                            <strong>Output:</strong>
-                            <pre>{testCase.output}</pre>
+                          <div className="test-case-content">
+                            <div className="test-case-item">
+                              <strong>Input:</strong>
+                              <pre>{testCase.input}</pre>
+                            </div>
+                            <div className="test-case-item">
+                              <strong>Output:</strong>
+                              <pre>{testCase.output}</pre>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
                 {problem.hints && problem.hints.length > 0 && (
@@ -181,28 +215,30 @@ const ProblemDetailPage = () => {
                     ))}
                   </div>
                 )}
-                <div className="problem-section">
-                  <h3>Topics</h3>
-                  <div className="topic-tags">
-                    {problem.topics.map((topic, idx) => (
-                      <span key={idx} className="topic-tag">
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                {problem.companies && problem.companies.length > 0 && (
+                <div className="problem-meta-sections">
                   <div className="problem-section">
-                    <h3>Companies</h3>
-                    <div className="company-tags">
-                      {problem.companies.map((company, idx) => (
-                        <span key={idx} className="company-tag">
-                          {company}
+                    <h3>🏷️ Topics</h3>
+                    <div className="topic-tags">
+                      {problem.topics.map((topic, idx) => (
+                        <span key={idx} className="topic-tag">
+                          {topic}
                         </span>
                       ))}
                     </div>
                   </div>
-                )}
+                  {problem.companies && problem.companies.length > 0 && (
+                    <div className="problem-section">
+                      <h3>🏢 Companies</h3>
+                      <div className="company-tags">
+                        {problem.companies.map((company, idx) => (
+                          <span key={idx} className="company-tag">
+                            {company}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             )}
             {activeTab === "solutions" && (

@@ -176,7 +176,7 @@ function LandingPage() {
             <h3 className="feature-title">AI Mentor</h3>
             <p className="feature-description">
               Get instant help with hints, explanations, and optimizations. 
-              Your personal coding assistant available 24/7.
+              Your personal coding assistant for learning support.
             </p>
           </div>
           <div className="feature-card">
@@ -290,16 +290,16 @@ function LandingPage() {
           <div className="about-visual">
             <div className="stats-showcase">
               <div className="showcase-item">
-                <div className="showcase-number">1000+</div>
-                <div className="showcase-label">Active Learners</div>
+                <div className="showcase-number">{stats.totalProblems}+</div>
+                <div className="showcase-label">DSA Problems</div>
               </div>
               <div className="showcase-item">
-                <div className="showcase-number">95%</div>
-                <div className="showcase-label">Success Rate</div>
+                <div className="showcase-number">{stats.topics}+</div>
+                <div className="showcase-label">Topics Covered</div>
               </div>
               <div className="showcase-item">
-                <div className="showcase-number">24/7</div>
-                <div className="showcase-label">AI Support</div>
+                <div className="showcase-number">AI</div>
+                <div className="showcase-label">Powered Mentor</div>
               </div>
             </div>
           </div>

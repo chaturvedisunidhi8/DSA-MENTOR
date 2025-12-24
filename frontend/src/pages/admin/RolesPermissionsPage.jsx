@@ -4,6 +4,7 @@ import '../../styles/Dashboard.css';
 
 const RolesPermissionsPage = () => {
   const [roles, setRoles] = useState([]);
+  const [allPermissions, setAllPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -17,24 +18,10 @@ const RolesPermissionsPage = () => {
   });
   const [errors, setErrors] = useState({});
 
-  const allPermissions = [
-    { id: 'all', label: 'All Permissions', category: 'System' },
-    { id: 'read:problems', label: 'View Problems', category: 'Problems' },
-    { id: 'create:problems', label: 'Create Problems', category: 'Problems' },
-    { id: 'edit:problems', label: 'Edit Problems', category: 'Problems' },
-    { id: 'delete:problems', label: 'Delete Problems', category: 'Problems' },
-    { id: 'submit:solutions', label: 'Submit Solutions', category: 'Solutions' },
-    { id: 'view:analytics', label: 'View Analytics', category: 'Analytics' },
-    { id: 'access:mentor', label: 'Access AI Mentor', category: 'Mentor' },
-    { id: 'manage:users', label: 'Manage Users', category: 'Users' },
-    { id: 'assign:roles', label: 'Assign Roles', category: 'Users' },
-    { id: 'view:reports', label: 'View Reports', category: 'Reports' },
-    { id: 'system:settings', label: 'System Settings', category: 'System' }
-  ];
-
-  // Fetch roles from backend
+  // Fetch roles and permissions from backend
   useEffect(() => {
     fetchRoles();
+    fetchPermissions();
   }, []);
 
   const fetchRoles = async () => {
@@ -50,6 +37,25 @@ const RolesPermissionsPage = () => {
       setError(err.response?.data?.message || 'Failed to load roles');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPermissions = async () => {
+    try {
+      const response = await api.get('/roles/permissions');
+      if (response.data.success) {
+        setAllPermissions(response.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching permissions:', err);
+      // Use fallback permissions if API fails
+      setAllPermissions([
+        { id: 'all', label: 'All Permissions', category: 'System' },
+        { id: 'read:problems', label: 'View Problems', category: 'Problems' },
+        { id: 'submit:solutions', label: 'Submit Solutions', category: 'Solutions' },
+        { id: 'view:analytics', label: 'View Analytics', category: 'Analytics' },
+        { id: 'access:mentor', label: 'Access AI Mentor', category: 'Features' },
+      ]);
     }
   };
 

@@ -3,6 +3,44 @@ const router = express.Router();
 const authenticate = require("../middleware/auth");
 const checkRole = require("../middleware/roleCheck");
 
+// Define all available permissions
+const AVAILABLE_PERMISSIONS = [
+  { id: 'all', label: 'All Permissions', category: 'System' },
+  { id: 'read:problems', label: 'View Problems', category: 'Problems' },
+  { id: 'create:problems', label: 'Create Problems', category: 'Problems' },
+  { id: 'update:problems', label: 'Update Problems', category: 'Problems' },
+  { id: 'delete:problems', label: 'Delete Problems', category: 'Problems' },
+  { id: 'submit:solutions', label: 'Submit Solutions', category: 'Solutions' },
+  { id: 'view:analytics', label: 'View Analytics', category: 'Analytics' },
+  { id: 'view:reports', label: 'View Reports', category: 'Reports' },
+  { id: 'manage:users', label: 'Manage Users', category: 'Users' },
+  { id: 'manage:roles', label: 'Manage Roles', category: 'Roles' },
+  { id: 'access:mentor', label: 'Access AI Mentor', category: 'Features' },
+  { id: 'manage:settings', label: 'Manage Settings', category: 'System' },
+];
+
+// Get all available permissions
+router.get(
+  "/permissions",
+  authenticate,
+  checkRole("superadmin"),
+  async (req, res) => {
+    try {
+      res.status(200).json({
+        success: true,
+        data: AVAILABLE_PERMISSIONS
+      });
+    } catch (error) {
+      console.error("Get permissions error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Server error",
+        error: error.message,
+      });
+    }
+  }
+);
+
 // Mock role storage (in production, this would be in database)
 let roles = [
   {

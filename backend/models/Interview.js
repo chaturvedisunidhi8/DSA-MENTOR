@@ -244,6 +244,14 @@ interviewSchema.methods.generateRecommendations = function () {
   });
 };
 
+// Indexes for better query performance (crucial for 10k+ users)
+// Note: userId reference field doesn't need explicit index when used in compound indexes
+interviewSchema.index({ userId: 1, createdAt: -1 }); // User's interviews sorted by date (compound covers userId alone)
+interviewSchema.index({ status: 1, createdAt: -1 }); // Filter by status
+interviewSchema.index({ userId: 1, status: 1 }); // User's interviews by status
+interviewSchema.index({ overallScore: -1 }); // Sort by score
+interviewSchema.index({ completedAt: -1 }); // Sort by completion date
+
 const Interview = mongoose.model("Interview", interviewSchema);
 
 module.exports = Interview;

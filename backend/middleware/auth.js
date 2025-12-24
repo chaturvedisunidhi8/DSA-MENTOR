@@ -30,9 +30,9 @@ const authenticate = async (req, res, next) => {
       });
     }
 
-    // Update last active
+    // Update last active (don't await to improve response time - fire and forget)
     user.lastActive = Date.now();
-    await user.save();
+    user.save().catch(err => console.error('Failed to update lastActive:', err));
 
     req.user = user;
     next();

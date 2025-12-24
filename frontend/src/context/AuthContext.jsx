@@ -10,32 +10,41 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is logged in on mount
   useEffect(() => {
+    let isMounted = true;
+    
     const initAuth = async () => {
       const token = localStorage.getItem("accessToken");
       const storedUser = localStorage.getItem("user");
 
-      if (token && storedUser) {
+      if (token && storedUser && isMounted) {
         try {
           setUser(JSON.parse(storedUser));
           setIsAuthenticated(true);
 
           // Verify token is still valid by fetching profile
           const { data } = await api.get("/auth/profile");
-          setUser(data.data.user);
-          localStorage.setItem("user", JSON.stringify(data.data.user));
+          if (isMounted) {
+            setUser(data.data.user);
+            localStorage.setItem("user", JSON.stringify(data.data.user));
+          }
         } catch (error) {
           console.error("Auth initialization error:", error);
-          // Token invalid, clear storage
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("user");
-          setIsAuthenticated(false);
-          setUser(null);
+          if (isMounted) {
+            // Token invalid, clear storage
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("user");
+            setIsAuthenticated(false);
+            setUser(null);
+          }
         }
       }
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     };
 
     initAuth();
+    return () => { isMounted = false; };
   }, []);
 
   const login = async (email, password) => {

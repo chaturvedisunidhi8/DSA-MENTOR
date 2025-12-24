@@ -3,12 +3,18 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require("path");
+const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth");
 const dashboardRoutes = require("./routes/dashboard");
 const problemRoutes = require("./routes/problems");
 const rolesRoutes = require("./routes/roles");
 const interviewRoutes = require("./routes/interview");
+const achievementRoutes = require("./routes/achievements");
+const analyticsRoutes = require("./routes/analytics");
+const reportsRoutes = require("./routes/reports");
+const adminSettingsRoutes = require("./routes/adminSettings");
 
 // Load environment variables
 dotenv.config();
@@ -52,6 +58,28 @@ connectDB();
 
 const app = express();
 
+// Rate limiting for API protection (handles 10,000+ users)
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per 15 minutes
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 login/signup attempts per 15 minutes
+  message: {
+    success: false,
+    message: 'Too many authentication attempts, please try again later.'
+  },
+  skipSuccessfulRequests: true, // Don't count successful logins
+});
+
 // Middleware
 app.use(
   cors({
@@ -63,16 +91,24 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// Enable gzip compression for all responses (reduces bandwidth by 70%)
+app.use(compression());
+
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Request logger middleware (development only)
-if (process.env.NODE_ENV === "development") {
+if (process.env.NODE_ENV === "development" && process.env.ENABLE_REQUEST_LOGGING === "true") {
   app.use((req, res, next) => {
     console.log(`${req.method} ${req.path}`);
     next();
   });
 }
+
+// Apply rate limiters
+app.use('/api/', apiLimiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -80,6 +116,10 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/problems", problemRoutes);
 app.use("/api/roles", rolesRoutes);
 app.use("/api/interview", interviewRoutes);
+app.use("/api/achievements", achievementRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/reports", reportsRoutes);
+app.use("/api/admin/settings", adminSettingsRoutes);
 
 // Health check with database status
 app.get("/api/health", async (req, res) => {

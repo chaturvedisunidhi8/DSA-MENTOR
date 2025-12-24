@@ -104,6 +104,36 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // Achievements
+    achievements: [
+      {
+        achievementId: String,
+        unlockedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    badges: {
+      bronze: { type: Number, default: 0 },
+      silver: { type: Number, default: 0 },
+      gold: { type: Number, default: 0 },
+      platinum: { type: Number, default: 0 },
+    },
+    // Problem tracking for achievements
+    solvedProblems: [
+      {
+        problemId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Problem",
+        },
+        solvedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        score: Number,
+      },
+    ],
   },
   {
     timestamps: true,
@@ -126,5 +156,13 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
+
+// Indexes for better query performance (crucial for 10k+ users)
+// Note: email and username unique indexes are auto-created
+userSchema.index({ role: 1 }); // For filtering by role
+userSchema.index({ lastActive: -1 }); // For sorting by activity
+userSchema.index({ createdAt: -1 }); // For sorting by registration date
+userSchema.index({ 'problemsSolved': -1, 'accuracy': -1 }); // Compound index for leaderboards
+userSchema.index({ refreshToken: 1 }, { sparse: true }); // Sparse index for refresh tokens
 
 module.exports = mongoose.model("User", userSchema);

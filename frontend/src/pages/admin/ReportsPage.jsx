@@ -1,38 +1,88 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../../utils/api";
 
 const ReportsPage = () => {
   const [selectedReport, setSelectedReport] = useState("user-activity");
+  const [reportData, setReportData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (selectedReport) {
+      fetchReportData(selectedReport);
+    }
+  }, [selectedReport]);
+
+  const fetchReportData = async (reportType) => {
+    try {
+      setLoading(true);
+      const { data } = await api.get(`/reports/${reportType}`);
+      setReportData(data.data);
+    } catch (error) {
+      console.error("Failed to fetch report data:", error);
+      setReportData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDownloadPDF = () => {
-    alert("PDF download will be available soon! This requires a report generation service.");
+    alert("PDF download will be available soon! This requires a PDF generation service like Puppeteer.");
     // TODO: Implement PDF generation
     // const reportName = reports.find((r) => r.id === selectedReport)?.name;
     // window.open(`/api/reports/${selectedReport}/pdf`, '_blank');
   };
 
   const handleDownloadCSV = () => {
-    // Generate a simple CSV for demo
-    const reportData = [
-      ["Metric", "This Week", "Last Week", "Change"],
-      ["Active Users", "1,456", "1,234", "+18%"],
-      ["New Registrations", "89", "76", "+17%"],
-      ["Problems Solved", "3,456", "3,120", "+11%"],
-      ["Avg Session Time", "24m", "26m", "-8%"],
-    ];
+    if (!reportData) return;
 
-    const csv = reportData.map(row => row.join(",")).join("\n");
+    let csvData = [];
+    
+    if (reportData.type === "user-activity" && reportData.metrics) {
+      csvData = [
+        ["Metric", "Current", "Previous", "Change"],
+        ...reportData.metrics.map((m) => [
+          m.name,
+          m.current,
+          m.previous,
+          `${m.change > 0 ? '+' : ''}${m.change}%`,
+        ]),
+      ];
+    } else if (reportData.type === "problem-performance" && reportData.metrics) {
+      csvData = [
+        ["Category", "Value", "Percentage"],
+        ...reportData.metrics.map((m) => [m.name, m.value, `${m.percentage}%`]),
+      ];
+    } else if (reportData.type === "system-usage" && reportData.metrics) {
+      csvData = [
+        ["Metric", "Value", "Status"],
+        ...reportData.metrics.map((m) => [m.name, m.value, m.status]),
+      ];
+    } else if (reportData.type === "user-progress" && reportData.performers) {
+      csvData = [
+        ["Rank", "Username", "Problems Solved", "Accuracy", "Streak", "Score"],
+        ...reportData.performers.map((p) => [
+          p.rank,
+          p.username,
+          p.problemsSolved,
+          `${p.accuracy}%`,
+          p.streak,
+          p.score,
+        ]),
+      ];
+    }
+
+    const csv = csvData.map((row) => row.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${selectedReport}-report.csv`;
+    a.download = `${selectedReport}-report-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
   const handleRefresh = () => {
-    alert("Report data refreshed!");
-    // TODO: Implement actual data refresh from API
+    fetchReportData(selectedReport);
   };
 
   const reports = [
@@ -94,146 +144,128 @@ const ReportsPage = () => {
         </div>
 
         <div className="report-content">
-          {selectedReport === "user-activity" && (
-            <div className="report-section">
-              <h3>User Activity Summary</h3>
-              <table className="report-table">
-                <thead>
-                  <tr>
-                    <th>Metric</th>
-                    <th>This Week</th>
-                    <th>Last Week</th>
-                    <th>Change</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Active Users</td>
-                    <td>1,456</td>
-                    <td>1,234</td>
-                    <td className="positive">+18%</td>
-                  </tr>
-                  <tr>
-                    <td>New Registrations</td>
-                    <td>89</td>
-                    <td>76</td>
-                    <td className="positive">+17%</td>
-                  </tr>
-                  <tr>
-                    <td>Problems Solved</td>
-                    <td>3,456</td>
-                    <td>3,120</td>
-                    <td className="positive">+11%</td>
-                  </tr>
-                  <tr>
-                    <td>Avg Session Time</td>
-                    <td>24m</td>
-                    <td>26m</td>
-                    <td className="negative">-8%</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
+          {loading ? (
+            <div className="loading">Loading report data...</div>
+          ) : !reportData ? (
+            <div className="error">Failed to load report data</div>
+          ) : (
+            <>
+              {selectedReport === "user-activity" && reportData.type === "user-activity" && (
+                <div className="report-section">
+                  <h3>{reportData.title}</h3>
+                  <p className="report-period">Period: {reportData.period}</p>
+                  <table className="report-table">
+                    <thead>
+                      <tr>
+                        <th>Metric</th>
+                        <th>Current</th>
+                        <th>Previous</th>
+                        <th>Change</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.metrics.map((metric, index) => (
+                        <tr key={index}>
+                          <td>{metric.name}</td>
+                          <td>{metric.current.toLocaleString()} {metric.unit}</td>
+                          <td>{metric.previous.toLocaleString()} {metric.unit}</td>
+                          <td className={metric.change >= 0 ? "positive" : "negative"}>
+                            {metric.change > 0 ? '+' : ''}{metric.change}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-          {selectedReport === "problem-performance" && (
-            <div className="report-section">
-              <h3>Problem Performance Summary</h3>
-              <table className="report-table">
-                <thead>
-                  <tr>
-                    <th>Difficulty</th>
-                    <th>Total Problems</th>
-                    <th>Avg Completion Rate</th>
-                    <th>Avg Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><span className="difficulty-badge easy">Easy</span></td>
-                    <td>456</td>
-                    <td>87%</td>
-                    <td>12m</td>
-                  </tr>
-                  <tr>
-                    <td><span className="difficulty-badge medium">Medium</span></td>
-                    <td>523</td>
-                    <td>64%</td>
-                    <td>28m</td>
-                  </tr>
-                  <tr>
-                    <td><span className="difficulty-badge hard">Hard</span></td>
-                    <td>255</td>
-                    <td>38%</td>
-                    <td>45m</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          )}
+              {selectedReport === "problem-performance" && reportData.type === "problem-performance" && (
+                <div className="report-section">
+                  <h3>{reportData.title}</h3>
+                  <p className="report-period">Period: {reportData.period}</p>
+                  <table className="report-table">
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>Count</th>
+                        <th>Percentage</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.metrics.map((metric, index) => (
+                        <tr key={index}>
+                          <td>
+                            {metric.name.includes("Easy") && <span className="difficulty-badge easy">{metric.name}</span>}
+                            {metric.name.includes("Medium") && <span className="difficulty-badge medium">{metric.name}</span>}
+                            {metric.name.includes("Hard") && <span className="difficulty-badge hard">{metric.name}</span>}
+                            {!metric.name.includes("Easy") && !metric.name.includes("Medium") && !metric.name.includes("Hard") && metric.name}
+                          </td>
+                          <td>{metric.value}</td>
+                          <td>{metric.percentage}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-          {selectedReport === "system-usage" && (
-            <div className="report-section">
-              <h3>System Usage Metrics</h3>
-              <div className="metrics-grid">
-                <div className="metric-box">
-                  <span className="metric-label">CPU Usage</span>
-                  <span className="metric-value">45%</span>
+              {selectedReport === "system-usage" && reportData.type === "system-usage" && (
+                <div className="report-section">
+                  <h3>{reportData.title}</h3>
+                  <p className="report-period">Period: {reportData.period}</p>
+                  <div className="metrics-grid">
+                    {reportData.metrics.map((metric, index) => (
+                      <div key={index} className="metric-box">
+                        <span className="metric-label">{metric.name}</span>
+                        <span className="metric-value">{metric.value}</span>
+                        <span className={`metric-status ${metric.status.toLowerCase()}`}>{metric.status}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="metric-box">
-                  <span className="metric-label">Memory Usage</span>
-                  <span className="metric-value">62%</span>
-                </div>
-                <div className="metric-box">
-                  <span className="metric-label">Database Size</span>
-                  <span className="metric-value">2.4 GB</span>
-                </div>
-                <div className="metric-box">
-                  <span className="metric-label">API Calls</span>
-                  <span className="metric-value">125K</span>
-                </div>
-              </div>
-            </div>
-          )}
+              )}
 
-          {selectedReport === "user-progress" && (
-            <div className="report-section">
-              <h3>Top Performers</h3>
-              <table className="report-table">
-                <thead>
-                  <tr>
-                    <th>Rank</th>
-                    <th>Username</th>
-                    <th>Problems Solved</th>
-                    <th>Accuracy</th>
-                    <th>Level</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>🥇</td>
-                    <td>alice_codes</td>
-                    <td>456</td>
-                    <td>94%</td>
-                    <td>Expert</td>
-                  </tr>
-                  <tr>
-                    <td>🥈</td>
-                    <td>bob_solver</td>
-                    <td>423</td>
-                    <td>91%</td>
-                    <td>Advanced</td>
-                  </tr>
-                  <tr>
-                    <td>🥉</td>
-                    <td>charlie_dev</td>
-                    <td>398</td>
-                    <td>89%</td>
-                    <td>Advanced</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+              {selectedReport === "user-progress" && reportData.type === "user-progress" && (
+                <div className="report-section">
+                  <h3>{reportData.title}</h3>
+                  <p className="report-period">Period: {reportData.period}</p>
+                  <table className="report-table">
+                    <thead>
+                      <tr>
+                        <th>Rank</th>
+                        <th>Username</th>
+                        <th>Problems Solved</th>
+                        <th>Accuracy</th>
+                        <th>Streak</th>
+                        <th>Score</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.performers && reportData.performers.length > 0 ? (
+                        reportData.performers.map((user) => (
+                          <tr key={user.rank}>
+                            <td>
+                              <span className={`rank-badge rank-${user.rank <= 3 ? user.rank : 'other'}`}>
+                                #{user.rank}
+                              </span>
+                            </td>
+                            <td>{user.username}</td>
+                            <td>{user.problemsSolved}</td>
+                            <td>{user.accuracy}%</td>
+                            <td>{user.streak} days</td>
+                            <td><strong>{user.score}</strong></td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="6" style={{ textAlign: 'center' }}>No user data available</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

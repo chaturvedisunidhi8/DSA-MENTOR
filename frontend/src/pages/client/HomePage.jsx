@@ -13,10 +13,20 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const [recentProblems, setRecentProblems] = useState([]);
   const [interviewStats, setInterviewStats] = useState(null);
+  
   useEffect(() => {
-    fetchDashboardData();
-    fetchRecentProblems();
-    fetchInterviewStats();
+    let isMounted = true;
+    const fetchAllData = async () => {
+      if (isMounted) {
+        await Promise.all([
+          fetchDashboardData(),
+          fetchRecentProblems(),
+          fetchInterviewStats()
+        ]);
+      }
+    };
+    fetchAllData();
+    return () => { isMounted = false; };
   }, []);
   const fetchDashboardData = async () => {
     try {

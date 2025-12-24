@@ -126,14 +126,6 @@ const Login = () => {
             <span>Mentor feedback</span>
           </div>
         </div>
-        <div className="users">
-          <div className="avatars">
-            <div className="avatar">👤</div>
-            <div className="avatar">👤</div>
-            <div className="avatar">👤</div>
-          </div>
-          <span className="badge">Join 1000+ developers</span>
-        </div>
       </div>
 
       <div className="login-right">
@@ -208,18 +200,6 @@ const Login = () => {
             </div>
           )}
 
-          {isLogin && (
-            <div className="forgot-password">
-              <button 
-                type="button" 
-                className="forgot-password-link"
-                onClick={() => setError("Password reset feature coming soon. Please contact support.")}
-              >
-                Forgot password?
-              </button>
-            </div>
-          )}
-
           <div className="form-options">
             <label className="checkbox">
               <input type="checkbox" />
@@ -229,13 +209,6 @@ const Login = () => {
 
           <button type="submit" className="login-btn" disabled={loading}>
             {loading ? "Authenticating..." : isLogin ? "Login" : "Signup"}
-          </button>
-
-          <div className="divider">or continue with</div>
-
-          <button type="button" className="google-btn">
-            <span className="google-icon">G</span>
-            Continue with Google
           </button>
 
           <p className="terms">

@@ -1,108 +1,49 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../../utils/api";
 
 const AchievePage = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [achievements, setAchievements] = useState([]);
+  const [badges, setBadges] = useState({
+    bronze: 0,
+    silver: 0,
+    gold: 0,
+    platinum: 0,
+  });
+  const [stats, setStats] = useState({
+    totalAchievements: 0,
+    unlockedAchievements: 0,
+    completionRate: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
-  const achievements = [
-    {
-      id: 1,
-      icon: "🎯",
-      title: "First Blood",
-      description: "Solve your first problem",
-      unlocked: true,
-      date: "2024-01-15",
-    },
-    {
-      id: 2,
-      icon: "🔥",
-      title: "Week Warrior",
-      description: "Maintain a 7-day streak",
-      unlocked: true,
-      date: "2024-02-20",
-    },
-    {
-      id: 3,
-      icon: "💯",
-      title: "Century Club",
-      description: "Solve 100 problems",
-      unlocked: true,
-      date: "2024-10-05",
-    },
-    {
-      id: 4,
-      icon: "🌟",
-      title: "Problem Master",
-      description: "Solve 500 problems",
-      unlocked: false,
-      progress: 145,
-      total: 500,
-    },
-    {
-      id: 5,
-      icon: "⚡",
-      title: "Speed Demon",
-      description: "Solve a problem in under 5 minutes",
-      unlocked: true,
-      date: "2024-03-12",
-    },
-    {
-      id: 6,
-      icon: "🎓",
-      title: "DP Expert",
-      description: "Master Dynamic Programming (90%+ accuracy)",
-      unlocked: false,
-      progress: 54,
-      total: 90,
-    },
-    {
-      id: 7,
-      icon: "🎤",
-      title: "Interview Rookie",
-      description: "Complete your first AI interview",
-      unlocked: false,
-      category: "interview",
-    },
-    {
-      id: 8,
-      icon: "🎯",
-      title: "Interview Expert",
-      description: "Score 80%+ in an AI interview",
-      unlocked: false,
-      category: "interview",
-    },
-    {
-      id: 9,
-      icon: "🏆",
-      title: "Interview Master",
-      description: "Complete 10 AI interviews",
-      unlocked: false,
-      progress: 0,
-      total: 10,
-      category: "interview",
-    },
-    {
-      id: 10,
-      icon: "🌟",
-      title: "Perfect Score",
-      description: "Score 100% in an AI interview",
-      unlocked: false,
-      category: "interview",
-    },
-    {
-      id: 11,
-      icon: "💬",
-      title: "Great Communicator",
-      description: "Achieve 90%+ communication score in interview",
-      unlocked: false,
-      category: "interview",
-    },
-  ];
+  useEffect(() => {
+    fetchAchievements();
+  }, []);
 
-  const badges = [
-    { name: "🥉 Bronze", count: 12, color: "#cd7f32" },
-    { name: "🥈 Silver", count: 8, color: "#c0c0c0" },
-    { name: "🥇 Gold", count: 3, color: "#ffd700" },
-  ];
+  const fetchAchievements = async () => {
+    try {
+      const { data } = await api.get("/achievements/user");
+      setAchievements(data.data.achievements || []);
+      setBadges(data.data.badges || { bronze: 0, silver: 0, gold: 0, platinum: 0 });
+      setStats(data.data.stats || { totalAchievements: 0, unlockedAchievements: 0, completionRate: 0 });
+    } catch (error) {
+      console.error("Failed to fetch achievements:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="page-content"><div className="loading">Loading achievements...</div></div>;
+  }
+
+  const badgeArray = [
+    { name: "🥉 Bronze", count: badges.bronze, color: "#cd7f32" },
+    { name: "🥈 Silver", count: badges.silver, color: "#c0c0c0" },
+    { name: "🥇 Gold", count: badges.gold, color: "#ffd700" },
+    { name: "💎 Platinum", count: badges.platinum, color: "#e5e4e2" },
+  ].filter(badge => badge.count > 0);
 
   return (
     <div className="page-content">
@@ -117,12 +58,12 @@ const AchievePage = () => {
           <div className="summary-info">
             <h3>Total Achievements</h3>
             <p className="summary-value">
-              {achievements.filter((a) => a.unlocked).length} / {achievements.length}
+              {stats.unlockedAchievements} / {stats.totalAchievements}
             </p>
           </div>
         </div>
 
-        {badges.map((badge, idx) => (
+        {badgeArray.map((badge, idx) => (
           <div key={idx} className="summary-card">
             <div className="summary-icon">{badge.name}</div>
             <div className="summary-info">
@@ -153,20 +94,26 @@ const AchievePage = () => {
           Locked
         </button>
         <button
-          className={selectedCategory === "interview" ? "active" : ""}
-          onClick={() => setSelectedCategory("interview")}
+          className={selectedCategory === "Practice" ? "active" : ""}
+          onClick={() => setSelectedCategory("Practice")}
         >
-          🎤 Interview
+          📚 Practice
+        </button>
+        <button
+          className={selectedCategory === "Progress" ? "active" : ""}
+          onClick={() => setSelectedCategory("Progress")}
+        >
+          🚀 Progress
         </button>
       </div>
-if (selectedCategory === "interview") return a.category === "interview";
-            
+
       <div className="achievements-grid">
         {achievements
           .filter((a) => {
             if (selectedCategory === "unlocked") return a.unlocked;
             if (selectedCategory === "locked") return !a.unlocked;
-            return true;
+            if (selectedCategory === "all") return true;
+            return a.category === selectedCategory;
           })
           .map((achievement) => (
             <div
@@ -180,20 +127,22 @@ if (selectedCategory === "interview") return a.category === "interview";
                 <div className="achievement-date">
                   Unlocked on {new Date(achievement.date).toLocaleDateString()}
                 </div>
-              ) : (
+              ) : achievement.progress !== undefined && achievement.target ? (
                 <div className="achievement-progress">
                   <div className="progress-bar">
                     <div
                       className="progress-fill"
                       style={{
-                        width: `${(achievement.progress / achievement.total) * 100}%`,
+                        width: `${achievement.progress}%`,
                       }}
                     ></div>
                   </div>
                   <span>
-                    {achievement.progress} / {achievement.total}
+                    {achievement.current} / {achievement.target}
                   </span>
                 </div>
+              ) : (
+                <div className="achievement-locked-status">🔒 Locked</div>
               )}
             </div>
           ))}

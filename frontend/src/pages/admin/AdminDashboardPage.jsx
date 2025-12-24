@@ -7,10 +7,12 @@ const AdminDashboardPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
+  const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboardData();
+    fetchRecentActivity();
   }, []);
 
   const fetchDashboardData = async () => {
@@ -22,6 +24,27 @@ const AdminDashboardPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchRecentActivity = async () => {
+    try {
+      const { data } = await api.get("/dashboard/recent-activity?limit=5");
+      setRecentActivity(data.data || []);
+    } catch (error) {
+      console.error("Failed to fetch recent activity:", error);
+    }
+  };
+
+  const getTimeAgo = (timestamp) => {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diff = Math.floor((now - time) / 1000); // difference in seconds
+
+    if (diff < 60) return "just now";
+    if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+    if (diff < 604800) return `${Math.floor(diff / 86400)} days ago`;
+    return time.toLocaleDateString();
   };
 
   if (loading) {
@@ -83,19 +106,19 @@ const AdminDashboardPage = () => {
       <div className="admin-quick-actions">
         <h3>Quick Actions</h3>
         <div className="quick-actions-grid">
-          <button className="action-card" onClick={() => navigate("/superadmin/dashboard/users")}>
+          <button className="action-card" onClick={() => navigate("/dashboard/admin/users")}>
             <span className="action-icon">➕</span>
             <span>Add New User</span>
           </button>
-          <button className="action-card" onClick={() => navigate("/superadmin/dashboard/problems")}>
+          <button className="action-card" onClick={() => navigate("/dashboard/admin/problems")}>
             <span className="action-icon">📝</span>
             <span>Create Problem</span>
           </button>
-          <button className="action-card" onClick={() => navigate("/superadmin/dashboard/reports")}>
+          <button className="action-card" onClick={() => navigate("/dashboard/admin/reports")}>
             <span className="action-icon">📊</span>
             <span>Generate Report</span>
           </button>
-          <button className="action-card" onClick={() => navigate("/superadmin/dashboard/settings")}>
+          <button className="action-card" onClick={() => navigate("/dashboard/admin/settings")}>
             <span className="action-icon">⚙️</span>
             <span>System Config</span>
           </button>
@@ -105,27 +128,19 @@ const AdminDashboardPage = () => {
       <div className="recent-activity">
         <h3>Recent Activity</h3>
         <div className="activity-list">
-          <div className="activity-item">
-            <span className="activity-icon">👤</span>
-            <div className="activity-content">
-              <p><strong>New user registered:</strong> john_doe</p>
-              <span className="activity-time">2 hours ago</span>
-            </div>
-          </div>
-          <div className="activity-item">
-            <span className="activity-icon">✅</span>
-            <div className="activity-content">
-              <p><strong>Problem solved:</strong> alice solved "Two Sum"</p>
-              <span className="activity-time">3 hours ago</span>
-            </div>
-          </div>
-          <div className="activity-item">
-            <span className="activity-icon">🏆</span>
-            <div className="activity-content">
-              <p><strong>Achievement unlocked:</strong> bob earned "Week Warrior"</p>
-              <span className="activity-time">5 hours ago</span>
-            </div>
-          </div>
+          {recentActivity.length > 0 ? (
+            recentActivity.map((activity, index) => (
+              <div key={index} className="activity-item">
+                <span className="activity-icon">{activity.icon}</span>
+                <div className="activity-content">
+                  <p>{activity.message}</p>
+                  <span className="activity-time">{getTimeAgo(activity.timestamp)}</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="no-activity">No recent activity</p>
+          )}
         </div>
       </div>
     </div>

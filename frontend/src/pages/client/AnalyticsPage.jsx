@@ -7,15 +7,21 @@ const AnalyticsPage = () => {
   const [stats, setStats] = useState(null);
   const [interviewStats, setInterviewStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  
   useEffect(() => {
-    fetchStats();
-    fetchInterviewStats();
+    let isMounted = true;
+    const fetchAllData = async () => {
+      if (isMounted) {
+        await Promise.all([fetchStats(), fetchInterviewStats()]);
+      }
+    };
+    fetchAllData();
+    return () => { isMounted = false; };
   }, [timeRange]);
   const fetchStats = async () => {
     try {
       setLoading(true);
       const { data } = await api.get("/dashboard/client");
-      console.log("Analytics data received:", data.data);
       setStats(data.data?.stats || data.data);
     } catch (error) {
       console.error("Failed to fetch stats:", error);

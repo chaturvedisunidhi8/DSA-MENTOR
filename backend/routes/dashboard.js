@@ -160,4 +160,91 @@ router.get("/public-stats", async (req, res) => {
   }
 });
 
+// Recent activity - accessible only by superadmin
+router.get(
+  "/recent-activity",
+  authenticate,
+  checkRole("superadmin"),
+  async (req, res) => {
+    try {
+      const Interview = require("../models/Interview");
+      const Problem = require("../models/Problem");
+      const limit = parseInt(req.query.limit) || 10;
+
+      // Get recent users (last 7 days)
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const recentUsers = await User.find({ createdAt: { $gte: sevenDaysAgo } })
+        .select("username createdAt")
+        .sort({ createdAt: -1 })
+        .limit(limit);
+
+      // Get recent completed interviews (problem solving activity)
+      const recentInterviews = await Interview.find({
+        status: "completed",
+        completedAt: { $gte: sevenDaysAgo },
+      })
+        .populate("userId", "username")
+        .populate("questions", "title")
+        .sort({ completedAt: -1 })
+        .limit(limit);
+
+      // Build activity feed
+      const activities = [];
+
+      // Add user registrations
+      recentUsers.forEach((user) => {
+        activities.push({
+          type: "user_registered",
+          icon: "👤",
+          message: `New user registered: ${user.username}`,
+          timestamp: user.createdAt,
+          metadata: { username: user.username },
+        });
+      });
+
+      // Add problem solving activities from interviews
+      recentInterviews.forEach((interview) => {
+        if (interview.userId && interview.questions && interview.questions.length > 0) {
+          const username = interview.userId.username;
+          const problemTitle = interview.questions[0].title;
+          const score = interview.overallScore || 0;
+
+          activities.push({
+            type: "problem_solved",
+            icon: score >= 70 ? "✅" : "📝",
+            message: `${username} completed interview: ${problemTitle}${
+              score >= 70 ? ` (${score}%)` : ""
+            }`,
+            timestamp: interview.completedAt,
+            metadata: {
+              username,
+              problemTitle,
+              score,
+              interviewId: interview._id,
+            },
+          });
+        }
+      });
+
+      // Sort all activities by timestamp
+      activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      // Limit to requested number
+      const limitedActivities = activities.slice(0, limit);
+
+      res.status(200).json({
+        success: true,
+        data: limitedActivities,
+      });
+    } catch (error) {
+      console.error("Recent activity error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error fetching recent activity",
+        error: error.message,
+      });
+    }
+  }
+);
+
 module.exports = router;
