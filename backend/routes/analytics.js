@@ -1,14 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const authenticate = require("../middleware/auth");
-const checkRole = require("../middleware/roleCheck");
+const { authenticate, checkPermission } = require("../middleware/auth");
 const analyticsController = require("../controllers/analyticsController");
 
-// Get admin analytics (superadmin only)
+// Get admin analytics (requires view:analytics permission)
 router.get(
   "/admin",
   authenticate,
-  checkRole("superadmin"),
+  checkPermission("view:analytics"),
   analyticsController.getAdminAnalytics
 );
 

@@ -3,7 +3,7 @@ import useAuth from "../../hooks/useAuth";
 import { useTheme } from "../../context/ThemeContext";
 
 const SettingsPage = () => {
-  const { user, updateProfile, uploadResume, deleteResume } = useAuth();
+  const { user, updateProfile, uploadResume, deleteResume, uploadProfilePicture, deleteProfilePicture } = useAuth();
   const { theme: currentTheme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(false);
@@ -24,6 +24,10 @@ const SettingsPage = () => {
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeUploading, setResumeUploading] = useState(false);
 
+  // Profile picture state
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePicturePreview, setProfilePicturePreview] = useState(user?.profilePicture || null);
+
   // Preferences
   const [theme, setTheme] = useState("dark");
   const [language, setLanguage] = useState("javascript");
@@ -42,6 +46,7 @@ const SettingsPage = () => {
       setSkills(user.skills?.join(", ") || "");
       setExperience(user.experience || "");
       setEducation(user.education || "");
+      setProfilePicturePreview(user.profilePicture || null);
     }
   }, [user]);
 
@@ -90,6 +95,81 @@ const SettingsPage = () => {
     } catch (error) {
       console.error("Failed to save profile:", error);
       setMessage({ type: "error", text: "Failed to save profile settings" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setMessage({ type: "error", text: "Please upload an image file" });
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setMessage({ type: "error", text: "Image size must be less than 5MB" });
+        return;
+      }
+      setProfilePicture(file);
+      setProfilePicturePreview(URL.createObjectURL(file));
+      setMessage({ type: "", text: "" });
+      
+      // Auto-upload the profile picture
+      handleProfilePictureUpload(file);
+    }
+  };
+
+  const handleProfilePictureUpload = async (file) => {
+    setLoading(true);
+    setMessage({ type: "", text: "" });
+
+    try {
+      console.log("Uploading profile picture:", file);
+      const result = await uploadProfilePicture(file);
+      console.log("Upload result:", result);
+      
+      if (result.success) {
+        setMessage({ type: "success", text: "Profile picture updated successfully!" });
+        console.log("Profile picture URL:", result.user?.profilePicture);
+        setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+      } else {
+        setMessage({ type: "error", text: result.message || "Failed to upload profile picture" });
+        setProfilePicture(null);
+        setProfilePicturePreview(user?.profilePicture || null);
+      }
+    } catch (error) {
+      console.error("Failed to upload profile picture:", error);
+      setMessage({ type: "error", text: "Failed to upload profile picture" });
+      setProfilePicture(null);
+      setProfilePicturePreview(user?.profilePicture || null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProfilePictureRemove = async () => {
+    if (!confirm("Are you sure you want to remove your profile picture?")) {
+      return;
+    }
+
+    setLoading(true);
+    setMessage({ type: "", text: "" });
+
+    try {
+      const result = await deleteProfilePicture();
+      
+      if (result.success) {
+        setProfilePicture(null);
+        setProfilePicturePreview(null);
+        setMessage({ type: "success", text: "Profile picture removed successfully!" });
+        setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+      } else {
+        setMessage({ type: "error", text: result.message || "Failed to remove profile picture" });
+      }
+    } catch (error) {
+      console.error("Failed to remove profile picture:", error);
+      setMessage({ type: "error", text: "Failed to remove profile picture" });
     } finally {
       setLoading(false);
     }
@@ -249,6 +329,41 @@ const SettingsPage = () => {
           {activeTab === "profile" && (
             <form onSubmit={handleSaveProfile} className="settings-form">
               <h2>Profile Information</h2>
+              
+              <div className="profile-picture-section">
+                <div className="profile-picture-preview">
+                  {profilePicturePreview ? (
+                    <img src={profilePicturePreview} alt="Profile" />
+                  ) : (
+                    <div className="profile-picture-placeholder">
+                      {user?.username?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                  )}
+                </div>
+                <div className="profile-picture-controls">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePictureChange}
+                    id="profile-picture-upload"
+                    style={{ display: "none" }}
+                  />
+                  <label htmlFor="profile-picture-upload" className="upload-picture-btn">
+                    📷 Choose Picture
+                  </label>
+                  {profilePicturePreview && (
+                    <button
+                      type="button"
+                      onClick={handleProfilePictureRemove}
+                      className="remove-picture-btn"
+                      disabled={loading}
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <p className="picture-hint">JPG, PNG or GIF (max 5MB)</p>
+                </div>
+              </div>
               
               <div className="form-group">
                 <label>Username</label>

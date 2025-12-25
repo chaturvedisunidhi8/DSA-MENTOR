@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import ThemeToggle from '../components/ThemeToggle';
+import { Button } from '../components/ui';
 import '../styles/LandingPage.css';
 
 function LandingPage() {
@@ -96,27 +97,30 @@ function LandingPage() {
               and personalized AI guidance. Join thousands of developers preparing for their dream jobs.
             </p>
             <div className="hero-cta">
-              <button onClick={handleGetStarted} className="cta-primary">
-                Get Started Free
-                <span className="cta-arrow">→</span>
-              </button>
-              <button onClick={() => document.getElementById('features').scrollIntoView({ behavior: 'smooth' })} 
-                      className="cta-secondary">
-                Explore Features
-              </button>
+              <Button 
+                onClick={handleGetStarted} 
+                variant="primary" 
+                size="large"
+                className="cta-large-btn"
+              >
+                Get Started for Free <span className="btn-arrow">→</span>
+              </Button>
             </div>
             <div className="hero-stats">
               <div className="stat-item">
+                <div className="stat-icon">💻</div>
                 <div className="stat-number">{stats.totalProblems}+</div>
-                <div className="stat-label">Problems</div>
+                <div className="stat-label">PROBLEMS</div>
               </div>
               <div className="stat-item">
+                <div className="stat-icon">📚</div>
                 <div className="stat-number">{stats.topics}+</div>
-                <div className="stat-label">Topics</div>
+                <div className="stat-label">TOPICS</div>
               </div>
               <div className="stat-item">
-                <div className="stat-number">🎤 AI</div>
-                <div className="stat-label">Interviews</div>
+                <div className="stat-icon">🔧</div>
+                <div className="stat-number">AI</div>
+                <div className="stat-label">INTERVIEWS</div>
               </div>
             </div>
           </div>
@@ -256,19 +260,19 @@ function LandingPage() {
             <h2 className="about-title">Why DSA MENTOR?</h2>
             <div className="about-points">
               <div className="about-point">
-                <div className="point-icon">✓</div>
+                <div className="point-icon">🎯</div>
                 <div className="point-text">
                   <strong>Structured Learning Path:</strong> Progress from basics to advanced topics systematically
                 </div>
               </div>
               <div className="about-point">
-                <div className="point-icon">✓</div>
+                <div className="point-icon">💼</div>
                 <div className="point-text">
                   <strong>Real Interview Questions:</strong> Practice problems asked in actual technical interviews
                 </div>
               </div>
               <div className="about-point">
-                <div className="point-icon">✓</div>
+                <div className="point-icon">📖</div>
                 <div className="point-text">
                   <strong>Detailed Solutions:</strong> Learn optimal approaches with step-by-step explanations
                 </div>
@@ -280,7 +284,7 @@ function LandingPage() {
                 </div>
               </div>
               <div className="about-point">
-                <div className="point-icon">✓</div>
+                <div className="point-icon">👥</div>
                 <div className="point-text">
                   <strong>Community Driven:</strong> Join a community of learners and grow together
                 </div>
@@ -290,14 +294,17 @@ function LandingPage() {
           <div className="about-visual">
             <div className="stats-showcase">
               <div className="showcase-item">
+                <div className="showcase-icon">💻</div>
                 <div className="showcase-number">{stats.totalProblems}+</div>
                 <div className="showcase-label">DSA Problems</div>
               </div>
               <div className="showcase-item">
+                <div className="showcase-icon">📚</div>
                 <div className="showcase-number">{stats.topics}+</div>
                 <div className="showcase-label">Topics Covered</div>
               </div>
               <div className="showcase-item">
+                <div className="showcase-icon">🔧</div>
                 <div className="showcase-number">AI</div>
                 <div className="showcase-label">Powered Mentor</div>
               </div>
@@ -313,10 +320,14 @@ function LandingPage() {
           <p className="cta-description">
             Join thousands of developers mastering DSA and landing their dream jobs
           </p>
-          <button onClick={handleGetStarted} className="cta-large-btn">
-            Get Started for Free
-            <span className="btn-arrow">→</span>
-          </button>
+          <Button 
+            onClick={handleGetStarted} 
+            variant="primary" 
+            size="large"
+            className="cta-large-btn"
+          >
+            Get Started for Free <span className="btn-arrow">→</span>
+          </Button>
         </div>
       </section>
 

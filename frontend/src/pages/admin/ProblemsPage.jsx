@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import api from "../../utils/api";
+import useAuth from "../../hooks/useAuth";
+import PermissionGuard from "../../components/PermissionGuard";
+
 const ProblemsPage = () => {
+  const { hasPermission } = useAuth();
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -165,9 +169,11 @@ const ProblemsPage = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="search-input"
         />
-        <button className="add-problem-btn" onClick={() => openModal()}>
-          ➕ Add New Problem
-        </button>
+        <PermissionGuard permission="create:problems">
+          <button className="add-problem-btn" onClick={() => openModal()}>
+            ➕ Add New Problem
+          </button>
+        </PermissionGuard>
       </div>
       <div className="problems-table-container">
         <table className="problems-table">
@@ -204,20 +210,24 @@ const ProblemsPage = () => {
                 <td>{new Date(problem.createdAt).toLocaleDateString()}</td>
                 <td>
                   <div className="action-buttons">
-                    <button
-                      className="btn-edit"
-                      title="Edit"
-                      onClick={() => openModal(problem)}
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      className="btn-delete"
-                      title="Delete"
-                      onClick={() => handleDelete(problem._id)}
-                    >
-                      🗑️
-                    </button>
+                    <PermissionGuard permission="update:problems">
+                      <button
+                        className="btn-edit"
+                        title="Edit"
+                        onClick={() => openModal(problem)}
+                      >
+                        ✏️
+                      </button>
+                    </PermissionGuard>
+                    <PermissionGuard permission="delete:problems">
+                      <button
+                        className="btn-delete"
+                        title="Delete"
+                        onClick={() => handleDelete(problem._id)}
+                      >
+                        🗑️
+                      </button>
+                    </PermissionGuard>
                   </div>
                 </td>
               </tr>

@@ -1,38 +1,37 @@
 const express = require("express");
 const router = express.Router();
-const authenticate = require("../middleware/auth");
-const checkRole = require("../middleware/roleCheck");
+const { authenticate, checkPermission } = require("../middleware/auth");
 const adminSettingsController = require("../controllers/adminSettingsController");
 
-// Get admin settings (superadmin only)
+// Get admin settings (requires manage:settings permission)
 router.get(
   "/",
   authenticate,
-  checkRole("superadmin"),
+  checkPermission("manage:settings"),
   adminSettingsController.getAdminSettings
 );
 
-// Update admin settings (superadmin only)
+// Update admin settings (requires manage:settings permission)
 router.put(
   "/",
   authenticate,
-  checkRole("superadmin"),
+  checkPermission("manage:settings"),
   adminSettingsController.updateAdminSettings
 );
 
-// Backup database (superadmin only)
+// Backup database (requires manage:settings permission)
 router.post(
   "/backup",
   authenticate,
-  checkRole("superadmin"),
+  checkPermission("manage:settings"),
   adminSettingsController.backupDatabase
 );
 
-// Restore database (superadmin only)
+// Restore database (requires manage:settings permission)
 router.post(
   "/restore",
   authenticate,
-  checkRole("superadmin"),
+  checkPermission("manage:settings"),
   adminSettingsController.restoreDatabase
 );
 

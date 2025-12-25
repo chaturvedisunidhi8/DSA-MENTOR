@@ -84,8 +84,8 @@ const HomePage = () => {
   }
   return (
     <div className="page-content">
-      <div className="welcome">
-        <h1>Hey {user?.username}! 👋</h1>
+      <div className="welcome welcome-animated">
+        <h1>Hey {user?.username}! <span className="wave">👋</span></h1>
         <p>Welcome back to your DSA journey</p>
         <div className="action-buttons">
           <button className="btn-primary" onClick={() => navigate("/dashboard/client/practice")}>
@@ -121,6 +121,39 @@ const HomePage = () => {
           >
             Start AI Interview →
           </button>
+        </div>
+      </div>
+
+      {/* Contribution Graph */}
+      <div className="contribution-section">
+        <h2>Your Activity 📈</h2>
+        <div className="contribution-graph">
+          {Array.from({ length: 52 }, (_, weekIndex) => (
+            <div key={weekIndex} className="contribution-week">
+              {Array.from({ length: 7 }, (_, dayIndex) => {
+                const intensity = Math.floor(Math.random() * 5);
+                return (
+                  <div
+                    key={dayIndex}
+                    className={`contribution-day intensity-${intensity}`}
+                    data-tooltip={`${intensity} contributions`}
+                    aria-label={`Day ${weekIndex * 7 + dayIndex + 1}: ${intensity} contributions`}
+                  />
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        <div className="contribution-legend">
+          <span>Less</span>
+          <div className="legend-squares">
+            <div className="contribution-day intensity-0" />
+            <div className="contribution-day intensity-1" />
+            <div className="contribution-day intensity-2" />
+            <div className="contribution-day intensity-3" />
+            <div className="contribution-day intensity-4" />
+          </div>
+          <span>More</span>
         </div>
       </div>
 

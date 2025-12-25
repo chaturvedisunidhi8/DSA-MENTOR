@@ -1,10 +1,12 @@
 const User = require("../models/User");
+const Role = require("../models/Role");
 const {
   generateAccessToken,
   generateRefreshToken,
   verifyRefreshToken,
 } = require("../utils/tokenUtils");
 const { parseResume } = require("../utils/resumeParser");
+const { getUserPermissions } = require("../middleware/auth");
 const fs = require("fs");
 const path = require("path");
 
@@ -41,11 +43,15 @@ const register = async (req, res) => {
           : "client"
         : "client";
 
+    // Get the corresponding Role document
+    const roleDoc = await Role.findOne({ name: userRole });
+
     const user = await User.create({
       username,
       email,
       password,
       role: userRole,
+      roleId: roleDoc ? roleDoc._id : null,
     });
 
     // Generate tokens
@@ -64,6 +70,10 @@ const register = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
+    // Populate role to get permissions
+    await user.populate('roleId', 'name permissions');
+    const permissions = getUserPermissions(user);
+
     res.status(201).json({
       success: true,
       message: "User registered successfully",
@@ -73,6 +83,7 @@ const register = async (req, res) => {
           username: user.username,
           email: user.email,
           role: user.role,
+          permissions: permissions,
           problemsSolved: user.problemsSolved,
           accuracy: user.accuracy,
           currentLevel: user.currentLevel,
@@ -104,8 +115,8 @@ const login = async (req, res) => {
       });
     }
 
-    // Find user by email
-    const user = await User.findOne({ email });
+    // Find user by email and populate role
+    const user = await User.findOne({ email }).populate('roleId', 'name permissions');
 
     if (!user) {
       return res.status(401).json({
@@ -141,6 +152,9 @@ const login = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
+    // Get user permissions
+    const permissions = getUserPermissions(user);
+
     res.status(200).json({
       success: true,
       message: "Login successful",
@@ -150,6 +164,7 @@ const login = async (req, res) => {
           username: user.username,
           email: user.email,
           role: user.role,
+          permissions: permissions,
           problemsSolved: user.problemsSolved,
           accuracy: user.accuracy,
           currentLevel: user.currentLevel,
@@ -568,6 +583,116 @@ const deleteResume = async (req, res) => {
   }
 };
 
+// Upload profile picture
+const uploadProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    const user = await User.findById(req.user._id).populate('roleId');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Delete old profile picture if exists
+    if (user.profilePicture) {
+      const oldFilePath = path.join(__dirname, "..", user.profilePicture);
+      if (fs.existsSync(oldFilePath)) {
+        fs.unlinkSync(oldFilePath);
+      }
+    }
+
+    // Save new profile picture path with full URL
+    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+    user.profilePicture = `${baseUrl}/uploads/profiles/${req.file.filename}`;
+    user.profilePictureUploadedAt = new Date();
+
+    await user.save();
+
+    // Get user permissions
+    const permissions = getUserPermissions(user);
+
+    // Return user without sensitive data
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    delete userResponse.refreshToken;
+    userResponse.permissions = permissions;
+
+    res.json({
+      success: true,
+      message: "Profile picture uploaded successfully",
+      user: userResponse,
+    });
+  } catch (error) {
+    console.error("Upload profile picture error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error uploading profile picture",
+      error: error.message,
+    });
+  }
+};
+
+// Delete profile picture
+const deleteProfilePicture = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate('roleId');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Delete profile picture file if exists
+    if (user.profilePicture) {
+      // Extract filename from URL
+      const filename = user.profilePicture.split('/').pop();
+      const filePath = path.join(__dirname, "..", "uploads", "profiles", filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    // Clear profile picture data from user
+    user.profilePicture = null;
+    user.profilePictureUploadedAt = null;
+
+    await user.save();
+
+    // Get user permissions
+    const permissions = getUserPermissions(user);
+
+    // Return user without sensitive data
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    delete userResponse.refreshToken;
+    userResponse.permissions = permissions;
+
+    res.json({
+      success: true,
+      message: "Profile picture deleted successfully",
+      user: userResponse,
+    });
+  } catch (error) {
+    console.error("Delete profile picture error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error deleting profile picture",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -579,4 +704,6 @@ module.exports = {
   updateOwnProfile,
   uploadResume,
   deleteResume,
+  uploadProfilePicture,
+  deleteProfilePicture,
 };

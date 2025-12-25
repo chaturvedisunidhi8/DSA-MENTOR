@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../../utils/api";
+import PermissionGuard from "../../components/PermissionGuard";
 
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -116,7 +117,9 @@ const UsersPage = () => {
             <option value="superadmin">Super Admin</option>
           </select>
         </div>
-        <button className="add-user-btn" onClick={openModal}>➕ Add New User</button>
+        <PermissionGuard permission="manage:users">
+          <button className="add-user-btn" onClick={openModal}>➕ Add New User</button>
+        </PermissionGuard>
       </div>
 
       <div className="users-table-container">
@@ -147,8 +150,12 @@ const UsersPage = () => {
                 <td>{new Date(u.createdAt).toLocaleDateString()}</td>
                 <td>
                   <div className="action-buttons">
-                    <button className="btn-edit" title="Edit" onClick={() => handleEdit(u)}>✏️</button>
-                    <button className="btn-delete" title="Delete" onClick={() => handleDelete(u._id)}>🗑️</button>
+                    <PermissionGuard permission="manage:users">
+                      <button className="btn-edit" title="Edit" onClick={() => handleEdit(u)}>✏️</button>
+                    </PermissionGuard>
+                    <PermissionGuard permission="manage:users">
+                      <button className="btn-delete" title="Delete" onClick={() => handleDelete(u._id)}>🗑️</button>
+                    </PermissionGuard>
                   </div>
                 </td>
               </tr>

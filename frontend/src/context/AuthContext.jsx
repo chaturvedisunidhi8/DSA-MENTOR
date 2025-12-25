@@ -174,6 +174,71 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const uploadProfilePicture = async (file) => {
+    try {
+      const response = await profileAPI.uploadProfilePicture(file);
+      
+      if (response.success) {
+        setUser(response.user);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        return { success: true, user: response.user };
+      }
+      
+      return { success: false, message: response.message };
+    } catch (error) {
+      console.error("Upload profile picture error:", error);
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to upload profile picture",
+      };
+    }
+  };
+
+  const deleteProfilePicture = async () => {
+    try {
+      const response = await profileAPI.deleteProfilePicture();
+      
+      if (response.success) {
+        setUser(response.user);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        return { success: true, user: response.user };
+      }
+      
+      return { success: false, message: response.message };
+    } catch (error) {
+      console.error("Delete profile picture error:", error);
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to delete profile picture",
+      };
+    }
+  };
+
+  // Check if user has a specific permission
+  const hasPermission = (requiredPermission) => {
+    if (!user || !user.permissions) {
+      return false;
+    }
+
+    // If user has 'all' permission, grant access to everything
+    if (user.permissions.includes('all')) {
+      return true;
+    }
+
+    // Check if user has the specific permission
+    return user.permissions.includes(requiredPermission);
+  };
+
+  // Check if user has any of multiple permissions (OR logic)
+  const hasAnyPermission = (...permissions) => {
+    return permissions.some(permission => hasPermission(permission));
+  };
+
+  // Check if user has all of multiple permissions (AND logic)
+  const hasAllPermissions = (...permissions) => {
+    return permissions.every(permission => hasPermission(permission));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -186,6 +251,11 @@ export const AuthProvider = ({ children }) => {
         updateProfile,
         uploadResume,
         deleteResume,
+        uploadProfilePicture,
+        deleteProfilePicture,
+        hasPermission,
+        hasAnyPermission,
+        hasAllPermissions,
       }}
     >
       {children}

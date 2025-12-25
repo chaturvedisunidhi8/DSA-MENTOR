@@ -3,6 +3,7 @@ import { useNavigate, NavLink, Outlet } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import api from "../utils/api";
 import ThemeToggle from "./ThemeToggle";
+import PermissionGuard from "./PermissionGuard";
 import "../styles/Dashboard.css";
 import "../styles/Dashboard-mobile.css";
 
@@ -86,7 +87,13 @@ const ClientDashboard = () => {
         </nav>
         <div className="sidebar-footer">
           <div className="user-profile">
-            <div className="user-avatar">{user?.username?.charAt(0).toUpperCase()}</div>
+            <div className="user-avatar">
+              {user?.profilePicture ? (
+                <img src={user.profilePicture} alt={user.username} />
+              ) : (
+                user?.username?.charAt(0).toUpperCase()
+              )}
+            </div>
             <div className="user-details">
               <p className="user-name">{user?.username}</p>
             </div>
@@ -121,7 +128,11 @@ const ClientDashboard = () => {
               Streak: {dashboardData?.stats?.streak || 0} 🔥
             </span>
             <div className="avatar" aria-label={`User avatar for ${user?.username}`}>
-              {user?.username?.charAt(0).toUpperCase()}
+              {user?.profilePicture ? (
+                <img src={user.profilePicture} alt={user.username} />
+              ) : (
+                user?.username?.charAt(0).toUpperCase()
+              )}
             </div>
             <button onClick={handleLogout} className="logout-btn" aria-label="Logout from account">
               Logout

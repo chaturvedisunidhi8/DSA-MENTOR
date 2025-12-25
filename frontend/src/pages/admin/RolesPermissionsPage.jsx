@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../utils/api';
+import PermissionGuard from '../../components/PermissionGuard';
 import '../../styles/Dashboard.css';
 
 const RolesPermissionsPage = () => {
@@ -232,9 +233,11 @@ const RolesPermissionsPage = () => {
           <h1>Roles & Permissions Management</h1>
           <p>Control access levels and permissions for all user roles</p>
         </div>
-        <button className="btn-primary" onClick={handleOpenModal}>
-          + Create New Role
-        </button>
+        <PermissionGuard permission="manage:roles">
+          <button className="btn-primary" onClick={handleOpenModal}>
+            + Create New Role
+          </button>
+        </PermissionGuard>
       </div>
 
       {loading ? (
@@ -259,22 +262,24 @@ const RolesPermissionsPage = () => {
                 </span>
               </div>
               {role.name !== 'Super Admin' && (
-                <div className="role-actions-inline">
-                  <button 
-                    className="btn-icon" 
-                    onClick={() => handleEditRole(role)}
-                    title="Edit Role"
-                  >
-                    ✏️
-                  </button>
-                  <button 
-                    className="btn-icon btn-danger-icon" 
-                    onClick={() => handleDeleteRole(role.id)}
-                    title="Delete Role"
-                  >
-                    🗑️
-                  </button>
-                </div>
+                <PermissionGuard permission="manage:roles">
+                  <div className="role-actions-inline">
+                    <button 
+                      className="btn-icon" 
+                      onClick={() => handleEditRole(role)}
+                      title="Edit Role"
+                    >
+                      ✏️
+                    </button>
+                    <button 
+                      className="btn-icon btn-danger-icon" 
+                      onClick={() => handleDeleteRole(role.id)}
+                      title="Delete Role"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </PermissionGuard>
               )}
             </div>
             

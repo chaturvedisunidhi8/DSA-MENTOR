@@ -1,6 +1,7 @@
 import { useNavigate, NavLink, Outlet } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 import ThemeToggle from "./ThemeToggle";
+import PermissionGuard from "./PermissionGuard";
 import "../styles/Dashboard.css";
 
 const SuperAdminDashboard = () => {
@@ -25,30 +26,42 @@ const SuperAdminDashboard = () => {
             <span className="nav-icon">📊</span>
             <span className="nav-text">Dashboard</span>
           </NavLink>
-          <NavLink to="/dashboard/admin/users">
-            <span className="nav-icon">👥</span>
-            <span className="nav-text">User Management</span>
-          </NavLink>
-          <NavLink to="/dashboard/admin/roles">
-            <span className="nav-icon">🔐</span>
-            <span className="nav-text">Roles & Permissions</span>
-          </NavLink>
-          <NavLink to="/dashboard/admin/problems">
-            <span className="nav-icon">📝</span>
-            <span className="nav-text">Problems</span>
-          </NavLink>
-          <NavLink to="/dashboard/admin/analytics">
-            <span className="nav-icon">📈</span>
-            <span className="nav-text">Analytics</span>
-          </NavLink>
-          <NavLink to="/dashboard/admin/reports">
-            <span className="nav-icon">📋</span>
-            <span className="nav-text">Reports</span>
-          </NavLink>
-          <NavLink to="/dashboard/admin/settings">
-            <span className="nav-icon">⚙️</span>
-            <span className="nav-text">Settings</span>
-          </NavLink>
+          <PermissionGuard permission="manage:users">
+            <NavLink to="/dashboard/admin/users">
+              <span className="nav-icon">👥</span>
+              <span className="nav-text">User Management</span>
+            </NavLink>
+          </PermissionGuard>
+          <PermissionGuard permission="manage:roles">
+            <NavLink to="/dashboard/admin/roles">
+              <span className="nav-icon">🔐</span>
+              <span className="nav-text">Roles & Permissions</span>
+            </NavLink>
+          </PermissionGuard>
+          <PermissionGuard permissions={["read:problems", "create:problems", "update:problems", "delete:problems"]}>
+            <NavLink to="/dashboard/admin/problems">
+              <span className="nav-icon">📝</span>
+              <span className="nav-text">Problems</span>
+            </NavLink>
+          </PermissionGuard>
+          <PermissionGuard permission="view:analytics">
+            <NavLink to="/dashboard/admin/analytics">
+              <span className="nav-icon">📈</span>
+              <span className="nav-text">Analytics</span>
+            </NavLink>
+          </PermissionGuard>
+          <PermissionGuard permission="view:reports">
+            <NavLink to="/dashboard/admin/reports">
+              <span className="nav-icon">📋</span>
+              <span className="nav-text">Reports</span>
+            </NavLink>
+          </PermissionGuard>
+          <PermissionGuard permission="manage:settings">
+            <NavLink to="/dashboard/admin/settings">
+              <span className="nav-icon">⚙️</span>
+              <span className="nav-text">Settings</span>
+            </NavLink>
+          </PermissionGuard>
         </nav>
         <div className="sidebar-footer">
           <div className="user-profile admin-profile">

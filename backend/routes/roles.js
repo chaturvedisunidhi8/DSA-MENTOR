@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const authenticate = require("../middleware/auth");
-const checkRole = require("../middleware/roleCheck");
+const { authenticate, checkPermission } = require("../middleware/auth");
+const Role = require("../models/Role");
+const User = require("../models/User");
 
 // Define all available permissions
 const AVAILABLE_PERMISSIONS = [
@@ -23,7 +24,7 @@ const AVAILABLE_PERMISSIONS = [
 router.get(
   "/permissions",
   authenticate,
-  checkRole("superadmin"),
+  checkPermission("manage:roles"),
   async (req, res) => {
     try {
       res.status(200).json({
@@ -65,16 +66,26 @@ let roles = [
 
 let nextRoleId = 3;
 
-// Get all roles - accessible only by superadmin
+// Get all roles - accessible with manage:roles permission
 router.get(
   "/",
   authenticate,
-  checkRole("superadmin"),
+  checkPermission("manage:roles"),
   async (req, res) => {
     try {
+      const roles = await Role.find().populate('userCount').lean();
+      
+      // Get actual user counts
+      const rolesWithCounts = await Promise.all(
+        roles.map(async (role) => {
+          const count = await User.countDocuments({ roleId: role._id });
+          return { ...role, userCount: count };
+        })
+      );
+
       res.status(200).json({
         success: true,
-        data: roles
+        data: rolesWithCounts
       });
     } catch (error) {
       console.error("Get roles error:", error);
@@ -87,11 +98,11 @@ router.get(
   }
 );
 
-// Create new role - accessible only by superadmin
+// Create new role - accessible with manage:roles permission
 router.post(
   "/",
   authenticate,
-  checkRole("superadmin"),
+  checkPermission("manage:roles"),
   async (req, res) => {
     try {
       const { name, description, permissions, color } = req.body;
@@ -119,7 +130,7 @@ router.post(
       }
 
       // Check if role name already exists
-      const existingRole = roles.find(r => r.name.toLowerCase() === name.trim().toLowerCase());
+      const existingRole = await Role.findOne({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
       if (existingRole) {
         return res.status(400).json({
           success: false,
@@ -128,22 +139,18 @@ router.post(
       }
 
       // Create new role
-      const newRole = {
-        id: nextRoleId++,
+      const newRole = await Role.create({
         name: name.trim(),
         description: description.trim(),
         permissions,
-        color: color || '#4ade80',
-        userCount: 0,
+        color: color || '#6366f1',
         isSystem: false
-      };
-
-      roles.push(newRole);
+      });
 
       res.status(201).json({
         success: true,
         message: "Role created successfully",
-        data: newRole
+        data: { ...newRole.toObject(), userCount: 0 }
       });
     } catch (error) {
       console.error("Create role error:", error);
@@ -156,31 +163,29 @@ router.post(
   }
 );
 
-// Update role - accessible only by superadmin
+// Update role - accessible with manage:roles permission
 router.put(
   "/:id",
   authenticate,
-  checkRole("superadmin"),
+  checkPermission("manage:roles"),
   async (req, res) => {
     try {
-      const roleId = parseInt(req.params.id);
+      const roleId = req.params.id;
       const { name, description, permissions, color } = req.body;
 
-      const roleIndex = roles.findIndex(r => r.id === roleId);
-      if (roleIndex === -1) {
+      const role = await Role.findById(roleId);
+      if (!role) {
         return res.status(404).json({
           success: false,
           message: "Role not found"
         });
       }
 
-      const role = roles[roleIndex];
-
       // Cannot modify system roles' core properties
-      if (role.isSystem && role.name === 'Super Admin') {
+      if (role.isSystem && role.name === 'superadmin') {
         return res.status(403).json({
           success: false,
-          message: "Cannot modify Super Admin role"
+          message: "Cannot modify superadmin role"
         });
       }
 
@@ -201,7 +206,10 @@ router.put(
 
       // Check if new name conflicts with existing role
       if (name && name.toLowerCase() !== role.name.toLowerCase()) {
-        const existingRole = roles.find(r => r.id !== roleId && r.name.toLowerCase() === name.trim().toLowerCase());
+        const existingRole = await Role.findOne({ 
+          _id: { $ne: roleId },
+          name: { $regex: new RegExp(`^${name.trim()}$`, 'i') }
+        });
         if (existingRole) {
           return res.status(400).json({
             success: false,
@@ -211,18 +219,19 @@ router.put(
       }
 
       // Update role
-      roles[roleIndex] = {
-        ...role,
-        name: name ? name.trim() : role.name,
-        description: description ? description.trim() : role.description,
-        permissions: permissions || role.permissions,
-        color: color || role.color
-      };
+      if (name) role.name = name.trim();
+      if (description) role.description = description.trim();
+      if (permissions) role.permissions = permissions;
+      if (color) role.color = color;
+      
+      await role.save();
+
+      const userCount = await User.countDocuments({ roleId: role._id });
 
       res.status(200).json({
         success: true,
         message: "Role updated successfully",
-        data: roles[roleIndex]
+        data: { ...role.toObject(), userCount }
       });
     } catch (error) {
       console.error("Update role error:", error);
@@ -235,24 +244,22 @@ router.put(
   }
 );
 
-// Delete role - accessible only by superadmin
+// Delete role - accessible with manage:roles permission
 router.delete(
   "/:id",
   authenticate,
-  checkRole("superadmin"),
+  checkPermission("manage:roles"),
   async (req, res) => {
     try {
-      const roleId = parseInt(req.params.id);
+      const roleId = req.params.id;
 
-      const roleIndex = roles.findIndex(r => r.id === roleId);
-      if (roleIndex === -1) {
+      const role = await Role.findById(roleId);
+      if (!role) {
         return res.status(404).json({
           success: false,
           message: "Role not found"
         });
       }
-
-      const role = roles[roleIndex];
 
       // Cannot delete system roles
       if (role.isSystem) {
@@ -263,14 +270,15 @@ router.delete(
       }
 
       // Cannot delete role with assigned users
-      if (role.userCount > 0) {
+      const userCount = await User.countDocuments({ roleId: role._id });
+      if (userCount > 0) {
         return res.status(400).json({
           success: false,
-          message: `Cannot delete role with ${role.userCount} assigned user(s). Reassign users first.`
+          message: `Cannot delete role with ${userCount} assigned user(s). Reassign users first.`
         });
       }
 
-      roles.splice(roleIndex, 1);
+      await role.deleteOne();
 
       res.status(200).json({
         success: true,

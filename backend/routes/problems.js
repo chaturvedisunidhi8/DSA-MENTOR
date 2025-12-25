@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const authenticate = require("../middleware/auth");
-const checkRole = require("../middleware/roleCheck");
+const { authenticate, checkPermission } = require("../middleware/auth");
 const {
   getAllProblems,
   getProblemBySlug,
@@ -11,13 +10,16 @@ const {
   getAllProblemsAdmin,
   getProblemStats,
 } = require("../controllers/problemController");
-// Public routes (authenticated users)
-router.get("/", authenticate, getAllProblems);
-router.get("/stats", authenticate, getProblemStats);
-router.get("/:slug", authenticate, getProblemBySlug);
-// Admin routes
-router.get("/admin/all", authenticate, checkRole("superadmin"), getAllProblemsAdmin);
-router.post("/", authenticate, checkRole("superadmin"), createProblem);
-router.put("/:id", authenticate, checkRole("superadmin"), updateProblem);
-router.delete("/:id", authenticate, checkRole("superadmin"), deleteProblem);
+
+// Public routes (authenticated users with read permission)
+router.get("/", authenticate, checkPermission("read:problems"), getAllProblems);
+router.get("/stats", authenticate, checkPermission("read:problems"), getProblemStats);
+router.get("/:slug", authenticate, checkPermission("read:problems"), getProblemBySlug);
+
+// Admin routes (permission-based)
+router.get("/admin/all", authenticate, checkPermission("read:problems"), getAllProblemsAdmin);
+router.post("/", authenticate, checkPermission("create:problems"), createProblem);
+router.put("/:id", authenticate, checkPermission("update:problems"), updateProblem);
+router.delete("/:id", authenticate, checkPermission("delete:problems"), deleteProblem);
+
 module.exports = router;

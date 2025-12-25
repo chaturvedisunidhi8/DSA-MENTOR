@@ -2,16 +2,26 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 
-// Ensure uploads directory exists
-const uploadDir = path.join(__dirname, "../uploads/resumes");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+// Ensure uploads directories exist
+const resumeUploadDir = path.join(__dirname, "../uploads/resumes");
+const profileUploadDir = path.join(__dirname, "../uploads/profiles");
+
+if (!fs.existsSync(resumeUploadDir)) {
+  fs.mkdirSync(resumeUploadDir, { recursive: true });
+}
+if (!fs.existsSync(profileUploadDir)) {
+  fs.mkdirSync(profileUploadDir, { recursive: true });
 }
 
 // Configure multer storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, uploadDir);
+    // Determine destination based on fieldname
+    if (file.fieldname === "profilePicture") {
+      cb(null, profileUploadDir);
+    } else {
+      cb(null, resumeUploadDir);
+    }
   },
   filename: function (req, file, cb) {
     // Create unique filename: userId-timestamp-originalname
@@ -22,15 +32,29 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter - only accept PDF files
+// File filter - accept PDF for resumes and images for profile pictures
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === "application/pdf") {
-    cb(null, true);
+  if (file.fieldname === "resume") {
+    if (file.mimetype === "application/pdf") {
+      cb(null, true);
+    } else {
+      cb(
+        new Error("Invalid file type. Only PDF files are allowed for resumes."),
+        false
+      );
+    }
+  } else if (file.fieldname === "profilePicture") {
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error("Invalid file type. Only JPG, PNG, and GIF images are allowed."),
+        false
+      );
+    }
   } else {
-    cb(
-      new Error("Invalid file type. Only PDF files are allowed for resumes."),
-      false
-    );
+    cb(null, true);
   }
 };
 

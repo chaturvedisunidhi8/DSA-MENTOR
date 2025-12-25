@@ -28,6 +28,14 @@ const userSchema = new mongoose.Schema(
       enum: ["client", "superadmin"],
       default: "client",
     },
+    roleId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
+      default: null
+    },
+    permissions: [{
+      type: String
+    }],
     refreshToken: {
       type: String,
       default: null,
@@ -101,6 +109,15 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
     resumeUploadedAt: {
+      type: Date,
+      default: null,
+    },
+    // Profile picture
+    profilePicture: {
+      type: String,
+      default: null,
+    },
+    profilePictureUploadedAt: {
       type: Date,
       default: null,
     },

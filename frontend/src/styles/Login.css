@@ -62,14 +62,19 @@
 }
 
 .branding h2 {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
 }
 
 .login-left h1 {
   font-size: 3rem;
   margin-bottom: 1rem;
   line-height: 1.2;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .login-left > p {
@@ -157,11 +162,14 @@
   background: none;
   border: none;
   color: var(--text-secondary);
-  font-size: 1rem;
+  font-size: 1.0625rem;
   padding: 1rem 2rem;
   cursor: pointer;
   position: relative;
   transition: color 0.3s;
+  font-weight: 600;
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
 
 .tabs button.active {
@@ -192,18 +200,20 @@ form {
 
 .form-group label {
   color: var(--text-primary);
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .form-group input {
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1rem;
   border-radius: 0.5rem;
   color: var(--text-primary);
   font-size: 1rem;
   transition: all 0.3s;
+  font-family: var(--font-primary);
 }
 
 .form-group input:focus {
@@ -289,20 +299,24 @@ form {
 }
 
 .login-btn {
-  background: var(--gradient-primary);
-  color: var(--bg-primary);
+  background: var(--gradient-button);
+  color: #1a1a1a;
   border: none;
-  padding: 0.875rem;
+  padding: 1rem;
   border-radius: 0.5rem;
-  font-size: 1rem;
+  font-size: 1.0625rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  box-shadow: var(--shadow-md);
 }
 
 .login-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-primary);
+  box-shadow: var(--shadow-primary-md);
+  filter: brightness(1.1);
 }
 
 .login-btn:disabled {
