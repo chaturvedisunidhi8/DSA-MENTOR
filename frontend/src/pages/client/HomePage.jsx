@@ -13,6 +13,7 @@ const HomePage = () => {
   const [error, setError] = useState(null);
   const [recentProblems, setRecentProblems] = useState([]);
   const [interviewStats, setInterviewStats] = useState(null);
+  const [activityData, setActivityData] = useState([]);
   
   useEffect(() => {
     let isMounted = true;
@@ -21,13 +22,30 @@ const HomePage = () => {
         await Promise.all([
           fetchDashboardData(),
           fetchRecentProblems(),
-          fetchInterviewStats()
+          fetchInterviewStats(),
+          fetchActivityGraph()
         ]);
       }
     };
     fetchAllData();
     return () => { isMounted = false; };
   }, []);
+
+  // Refetch data when page becomes visible (user navigates back)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchActivityGraph();
+        fetchDashboardData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   const fetchDashboardData = async () => {
     try {
       setError(null);
@@ -55,6 +73,17 @@ const HomePage = () => {
       setInterviewStats(data.stats);
     } catch (error) {
       console.error("Failed to fetch interview stats:", error);
+    }
+  };
+  const fetchActivityGraph = async () => {
+    try {
+      const response = await api.get("/dashboard/activity-graph");
+      if (response.data && response.data.success) {
+        setActivityData(response.data.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching activity graph:", error);
+      setActivityData([]);
     }
   };
   if (loading) {
@@ -85,7 +114,7 @@ const HomePage = () => {
   return (
     <div className="page-content">
       <div className="welcome welcome-animated">
-        <h1>Hey {user?.username}! <span className="wave">👋</span></h1>
+        <h1>Hey {user?.username}! <span className="wave" style={{WebkitTextFillColor: 'currentColor'}}>👋</span></h1>
         <p>Welcome back to your DSA journey</p>
         <div className="action-buttons">
           <button className="btn-primary" onClick={() => navigate("/dashboard/client/practice")}>
@@ -131,13 +160,31 @@ const HomePage = () => {
           {Array.from({ length: 52 }, (_, weekIndex) => (
             <div key={weekIndex} className="contribution-week">
               {Array.from({ length: 7 }, (_, dayIndex) => {
-                const intensity = Math.floor(Math.random() * 5);
+                // Calculate the date for this cell
+                const daysAgo = (51 - weekIndex) * 7 + (6 - dayIndex);
+                const cellDate = new Date();
+                cellDate.setDate(cellDate.getDate() - daysAgo);
+                const dateKey = cellDate.toISOString().split("T")[0];
+                
+                // Find activity count for this date
+                const activity = activityData.find(a => a.date === dateKey);
+                const count = activity ? activity.count : 0;
+                
+                // Map count to intensity (0-4)
+                // 0: no activity, 1: 1 problem, 2: 2-3 problems, 3: 4-5 problems, 4: 6+ problems
+                let intensity = 0;
+                if (count >= 6) intensity = 4;
+                else if (count >= 4) intensity = 3;
+                else if (count >= 2) intensity = 2;
+                else if (count >= 1) intensity = 1;
+                
                 return (
                   <div
                     key={dayIndex}
                     className={`contribution-day intensity-${intensity}`}
-                    data-tooltip={`${intensity} contributions`}
-                    aria-label={`Day ${weekIndex * 7 + dayIndex + 1}: ${intensity} contributions`}
+                    data-tooltip={`${count} problem${count !== 1 ? 's' : ''} solved`}
+                    aria-label={`${dateKey}: ${count} problems solved`}
+                    title={`${dateKey}: ${count} problem${count !== 1 ? 's' : ''} solved`}
                   />
                 );
               })}
@@ -201,7 +248,7 @@ const HomePage = () => {
                 </div>
                 <button 
                   className="solve-btn"
-                  onClick={() => navigate(`/dashboard/practice/${problem.slug}`)}
+                  onClick={() => navigate(`/dashboard/client/practice/${problem.slug}`)}
                 >
                   Solve Now →
                 </button>

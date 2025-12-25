@@ -160,6 +160,62 @@ router.get("/public-stats", async (req, res) => {
   }
 });
 
+// Activity graph data - accessible by client and superadmin
+router.get(
+  "/activity-graph",
+  authenticate,
+  checkRole("client", "superadmin"),
+  async (req, res) => {
+    try {
+      const user = await User.findById(req.user.id).select("solvedProblems");
+
+      // Create a map to count problems solved per day
+      const activityMap = new Map();
+
+      // Get date 365 days ago
+      const oneYearAgo = new Date();
+      oneYearAgo.setDate(oneYearAgo.getDate() - 365);
+
+      // Process solved problems
+      if (user && user.solvedProblems) {
+        user.solvedProblems.forEach((problem) => {
+          const solvedDate = new Date(problem.solvedAt);
+          
+          // Only include problems from last 365 days
+          if (solvedDate >= oneYearAgo) {
+            // Format date as YYYY-MM-DD
+            const dateKey = solvedDate.toISOString().split("T")[0];
+            
+            // Increment count for this date
+            activityMap.set(dateKey, (activityMap.get(dateKey) || 0) + 1);
+          }
+        });
+      }
+
+      // Convert map to array of objects
+      const activityData = Array.from(activityMap, ([date, count]) => ({
+        date,
+        count,
+      }));
+
+      // Sort by date
+      activityData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      res.status(200).json({
+        success: true,
+        data: activityData,
+      });
+    } catch (error) {
+      console.error("Activity graph error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error fetching activity graph",
+        error: error.message,
+      });
+    }
+  }
+);
+
 // Recent activity - accessible only by superadmin
 router.get(
   "/recent-activity",

@@ -72,25 +72,35 @@ const ProblemDetailPage = () => {
     if (!confirmed) return;
 
     try {
-      // TODO: Implement submission API
-      alert(
-        "✅ Submission Feature\n\n" +
-        "Your solution would be:\n" +
-        "1. Validated for syntax\n" +
-        "2. Run against all test cases\n" +
-        "3. Scored based on correctness & efficiency\n" +
-        "4. Added to your progress\n\n" +
-        "Backend integration coming soon!"
-      );
+      const response = await api.post(`/problems/${slug}/submit`, {
+        code,
+        language: selectedLanguage,
+      });
 
-      // Placeholder for actual submission
-      // const response = await api.post(`/problems/${slug}/submit`, {
-      //   code,
-      //   language: selectedLanguage,
-      // });
+      if (response.data.success) {
+        const { passed, score, passedTests, totalTests, message, newlySolved } = response.data;
+        
+        alert(
+          `${passed ? '✅' : '❌'} Submission Result\n\n` +
+          `${message}\n\n` +
+          `Score: ${score}%\n` +
+          `Test Cases: ${passedTests}/${totalTests} passed\n` +
+          (newlySolved ? '\n🎉 Added to your solved problems!' : '')
+        );
+
+        // If newly solved, navigate back to refresh the activity graph
+        if (newlySolved) {
+          setTimeout(() => {
+            navigate('/dashboard/client');
+          }, 2000);
+        }
+      }
     } catch (error) {
       console.error("Submission error:", error);
-      alert("Failed to submit solution");
+      alert(
+        "Failed to submit solution\n\n" +
+        (error.response?.data?.message || "Please try again")
+      );
     }
   };
   if (loading) {

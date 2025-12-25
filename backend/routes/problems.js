@@ -9,12 +9,14 @@ const {
   deleteProblem,
   getAllProblemsAdmin,
   getProblemStats,
+  submitProblem,
 } = require("../controllers/problemController");
 
 // Public routes (authenticated users with read permission)
 router.get("/", authenticate, checkPermission("read:problems"), getAllProblems);
 router.get("/stats", authenticate, checkPermission("read:problems"), getProblemStats);
 router.get("/:slug", authenticate, checkPermission("read:problems"), getProblemBySlug);
+router.post("/:slug/submit", authenticate, checkPermission("read:problems"), submitProblem);
 
 // Admin routes (permission-based)
 router.get("/admin/all", authenticate, checkPermission("read:problems"), getAllProblemsAdmin);

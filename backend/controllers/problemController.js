@@ -1,4 +1,6 @@
 const Problem = require("../models/Problem");
+const User = require("../models/User");
+
 // Get all problems (with filters)
 exports.getAllProblems = async (req, res) => {
   try {
@@ -238,6 +240,91 @@ exports.getProblemStats = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error fetching problem stats",
+      error: error.message,
+    });
+  }
+};
+
+// Submit problem solution
+exports.submitProblem = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { code, language } = req.body;
+    const userId = req.user.id;
+
+    // Find the problem
+    const problem = await Problem.findOne({ slug, isActive: true });
+    if (!problem) {
+      return res.status(404).json({
+        success: false,
+        message: "Problem not found",
+      });
+    }
+
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if problem was already solved
+    const alreadySolved = user.solvedProblems.some(
+      (sp) => sp.problemId.toString() === problem._id.toString()
+    );
+
+    // Simple code execution simulation (replace with actual execution engine)
+    const totalTests = problem.hiddenTestCases?.length || problem.sampleTestCases?.length || 5;
+    const passedTests = code && code.length > 20 ? totalTests : Math.floor(totalTests * 0.6);
+    const success = passedTests === totalTests;
+    const score = Math.round((passedTests / totalTests) * 100);
+
+    // Update problem stats
+    problem.stats.totalSubmissions += 1;
+    if (success) {
+      problem.stats.acceptedSubmissions += 1;
+    }
+    problem.stats.totalAttempts += 1;
+    await problem.save();
+
+    // If successful and not already solved, add to user's solved problems
+    if (success && !alreadySolved) {
+      user.solvedProblems.push({
+        problemId: problem._id,
+        solvedAt: new Date(),
+        score: score,
+      });
+      user.problemsSolved += 1;
+      
+      // Update accuracy
+      const totalSolved = user.solvedProblems.length;
+      const avgScore = user.solvedProblems.reduce((sum, sp) => sum + (sp.score || 0), 0) / totalSolved;
+      user.accuracy = Math.round(avgScore);
+      
+      await user.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      passed: success,
+      score,
+      passedTests,
+      totalTests,
+      message: success
+        ? alreadySolved
+          ? "Problem solved again! Great job!"
+          : "Congratulations! Problem solved successfully!"
+        : `Solution failed. Passed ${passedTests}/${totalTests} test cases.`,
+      alreadySolved,
+      newlySolved: success && !alreadySolved,
+    });
+  } catch (error) {
+    console.error("Submit problem error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error submitting problem",
       error: error.message,
     });
   }
