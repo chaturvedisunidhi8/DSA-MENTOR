@@ -120,16 +120,14 @@ const InterviewSessionPage = () => {
         code,
         language,
       });
-      
-      if (data.success) {
-        addAIMessage(
-          `Great! Your code passed ${data.passedTests}/${data.totalTests} test cases.\n\n${data.feedback}`
-        );
-      } else {
-        addAIMessage(
-          `Your code didn't pass all tests. ${data.passedTests}/${data.totalTests} passed.\n\nError: ${data.error}\n\n${data.feedback}`
-        );
-      }
+
+      const resultLines = (data.results || []).map((r) =>
+        `Test ${r.index + 1}${r.isHidden ? " (hidden)" : ""}: ${r.passed ? "✅" : "❌"} stdout=${r.stdout || "<empty>"}${r.stderr ? ` stderr=${r.stderr}` : ""}`
+      );
+
+      addAIMessage(
+        `${data.success ? "Great!" : "Needs work."} ${data.passedTests}/${data.totalTests} tests passed.\n${resultLines.join("\n")}`
+      );
     } catch (error) {
       console.error("Failed to run code:", error);
       addAIMessage("I couldn't run your code. Please check for syntax errors.");
@@ -156,7 +154,11 @@ const InterviewSessionPage = () => {
         questionIndex: currentQuestionIndex,
       });
 
-      addAIMessage(data.feedback);
+      const resultLines = (data.results || []).map((r) =>
+        `Test ${r.index + 1}${r.isHidden ? " (hidden)" : ""}: ${r.passed ? "✅" : "❌"} stdout=${r.stdout || "<empty>"}${r.stderr ? ` stderr=${r.stderr}` : ""}`
+      );
+
+      addAIMessage(`${data.feedback}\n${resultLines.join("\n")}`);
 
       // Move to next question or end interview
       if (data.hasNextQuestion) {

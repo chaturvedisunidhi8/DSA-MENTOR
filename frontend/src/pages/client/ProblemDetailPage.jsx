@@ -8,6 +8,7 @@ const ProblemDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState("javascript");
   const [code, setCode] = useState("");
+  const [runResults, setRunResults] = useState(null);
   const [activeTab, setActiveTab] = useState("description");
   
   useEffect(() => {
@@ -43,17 +44,19 @@ const ProblemDetailPage = () => {
     }
 
     try {
-      // TODO: Integrate with code execution service (Judge0, etc.)
-      alert(
-        "🚀 Code Execution Feature\n\n" +
-        "Running your code against sample test cases...\n\n" +
-        "This feature requires a code execution engine integration.\n" +
-        "Your code will be tested against all sample inputs.\n\n" +
-        "Coming soon!"
-      );
+      const { data } = await api.post(`/problems/${slug}/run`, {
+        code,
+        language: selectedLanguage,
+      });
+
+      setRunResults(data);
+
+      const summary = `${data.passedTests}/${data.totalTests} sample tests passed`;
+      alert(`Run complete\n\n${summary}`);
     } catch (error) {
       console.error("Code execution error:", error);
-      alert("Failed to run code");
+      const message = error.response?.data?.message || "Failed to run code";
+      alert(message);
     }
   };
 
@@ -78,8 +81,9 @@ const ProblemDetailPage = () => {
       });
 
       if (response.data.success) {
-        const { passed, score, passedTests, totalTests, message, newlySolved } = response.data;
-        
+        const { passed, score, passedTests, totalTests, message, newlySolved, results } = response.data;
+        setRunResults({ passedTests, totalTests, results });
+
         alert(
           `${passed ? '✅' : '❌'} Submission Result\n\n` +
           `${message}\n\n` +
@@ -88,7 +92,6 @@ const ProblemDetailPage = () => {
           (newlySolved ? '\n🎉 Added to your solved problems!' : '')
         );
 
-        // If newly solved, navigate back to refresh the activity graph
         if (newlySolved) {
           setTimeout(() => {
             navigate('/dashboard/client');
@@ -292,6 +295,33 @@ const ProblemDetailPage = () => {
               ✓ Submit
             </button>
           </div>
+          {runResults && (
+            <div className="execution-results">
+              <h4>Latest Execution</h4>
+              <p>
+                Passed {runResults.passedTests}/{runResults.totalTests} test cases
+              </p>
+              <div className="results-table">
+                <div className="results-row header">
+                  <span>#</span>
+                  <span>Status</span>
+                  <span>Stdout</span>
+                  <span>Stderr</span>
+                </div>
+                {runResults.results?.map((result) => (
+                  <div key={result.index} className="results-row">
+                    <span>{result.index + 1}</span>
+                    <span className={result.passed ? "pass" : "fail"}>
+                      {result.passed ? "Pass" : "Fail"}
+                      {result.isHidden ? " (hidden)" : ""}
+                    </span>
+                    <span><pre>{result.stdout || ""}</pre></span>
+                    <span><pre>{result.stderr || ""}</pre></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

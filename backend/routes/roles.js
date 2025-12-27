@@ -12,12 +12,17 @@ const AVAILABLE_PERMISSIONS = [
   { id: 'update:problems', label: 'Update Problems', category: 'Problems' },
   { id: 'delete:problems', label: 'Delete Problems', category: 'Problems' },
   { id: 'submit:solutions', label: 'Submit Solutions', category: 'Solutions' },
+  { id: 'create:tracks', label: 'Create Career Tracks', category: 'Career Tracks' },
+  { id: 'update:tracks', label: 'Update Career Tracks', category: 'Career Tracks' },
+  { id: 'delete:tracks', label: 'Delete Career Tracks', category: 'Career Tracks' },
   { id: 'view:analytics', label: 'View Analytics', category: 'Analytics' },
   { id: 'view:reports', label: 'View Reports', category: 'Reports' },
   { id: 'manage:users', label: 'Manage Users', category: 'Users' },
   { id: 'manage:roles', label: 'Manage Roles', category: 'Roles' },
   { id: 'access:mentor', label: 'Access AI Mentor', category: 'Features' },
   { id: 'manage:settings', label: 'Manage Settings', category: 'System' },
+  { id: 'mentor:students', label: 'Manage Students (Mentor)', category: 'Mentor' },
+  { id: 'mentor:assignments', label: 'Create Assignments (Mentor)', category: 'Mentor' },
 ];
 
 // Get all available permissions

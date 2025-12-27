@@ -15,6 +15,10 @@ const achievementRoutes = require("./routes/achievements");
 const analyticsRoutes = require("./routes/analytics");
 const reportsRoutes = require("./routes/reports");
 const adminSettingsRoutes = require("./routes/adminSettings");
+const careerTrackRoutes = require("./routes/careerTracks");
+const discussionRoutes = require("./routes/discussions");
+const leaderboardRoutes = require("./routes/leaderboard");
+const mentorRoutes = require("./routes/mentor");
 
 // Load environment variables
 dotenv.config();
@@ -120,6 +124,10 @@ app.use("/api/achievements", achievementRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/reports", reportsRoutes);
 app.use("/api/admin/settings", adminSettingsRoutes);
+app.use("/api/career-tracks", careerTrackRoutes);
+app.use("/api/discussions", discussionRoutes);
+app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/mentor", mentorRoutes);
 
 // Health check with database status
 app.get("/api/health", async (req, res) => {

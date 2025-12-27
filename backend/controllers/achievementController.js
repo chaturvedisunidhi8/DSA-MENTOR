@@ -111,6 +111,33 @@ const ACHIEVEMENTS = [
     requirement: { type: "late_completion", hour: 22 },
     badge: "bronze",
   },
+  {
+    id: "track_beginner",
+    icon: "🚀",
+    title: "Track Starter",
+    description: "Complete your first career track",
+    category: "Career Tracks",
+    requirement: { type: "tracks_completed", count: 1 },
+    badge: "silver",
+  },
+  {
+    id: "track_master",
+    icon: "🏆",
+    title: "Track Master",
+    description: "Complete 3 career tracks",
+    category: "Career Tracks",
+    requirement: { type: "tracks_completed", count: 3 },
+    badge: "gold",
+  },
+  {
+    id: "dedicated_learner",
+    icon: "📖",
+    title: "Dedicated Learner",
+    description: "Complete 50 lessons across all tracks",
+    category: "Career Tracks",
+    requirement: { type: "lessons_completed", count: 50 },
+    badge: "silver",
+  },
 ];
 
 // Get all achievements definitions
@@ -220,6 +247,20 @@ exports.getUserAchievements = async (req, res) => {
           target = 1;
           break;
 
+        case "tracks_completed":
+          // Will be calculated from UserTrackProgress
+          current = 0; // Placeholder - would query UserTrackProgress
+          target = achievement.requirement.count;
+          progress = Math.min((current / target) * 100, 100);
+          break;
+
+        case "lessons_completed":
+          // Will be calculated from UserTrackProgress
+          current = 0; // Placeholder - would query UserTrackProgress
+          target = achievement.requirement.count;
+          progress = Math.min((current / target) * 100, 100);
+          break;
+
         default:
           progress = 0;
       }
@@ -320,6 +361,24 @@ exports.checkAndUnlockAchievements = async (userId) => {
               ? completedHour < hour
               : completedHour >= hour;
           });
+          break;
+
+        case "tracks_completed":
+          // Import and check UserTrackProgress
+          const { UserTrackProgress } = require('../models/CareerTrack');
+          const completedTracks = await UserTrackProgress.countDocuments({
+            userId,
+            status: 'completed'
+          });
+          shouldUnlock = completedTracks >= achievement.requirement.count;
+          break;
+
+        case "lessons_completed":
+          // Import and check UserTrackProgress
+          const { UserTrackProgress: UTP } = require('../models/CareerTrack');
+          const progressRecords = await UTP.find({ userId });
+          const totalLessons = progressRecords.reduce((sum, p) => sum + p.completedLessons.length, 0);
+          shouldUnlock = totalLessons >= achievement.requirement.count;
           break;
       }
 

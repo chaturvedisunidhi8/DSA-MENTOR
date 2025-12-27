@@ -1,75 +1,16 @@
 const Interview = require("../models/Interview");
 const Problem = require("../models/Problem");
-
-// Helper function to simulate AI responses (replace with actual AI API calls)
-const generateAIResponse = async (context, userMessage, code) => {
-  // This is a placeholder. In production, integrate with OpenAI, Anthropic, or similar
-  const responses = {
-    greeting: "Hello! I'm your AI interviewer. Let's begin with your first question.",
-    hint: "Think about the problem step by step. What data structure would be most efficient here?",
-    encouragement: "You're on the right track! Keep going.",
-    clarification: "Let me clarify - the input will always be a sorted array.",
-    codeReview: "Your solution looks good! Consider edge cases like empty arrays.",
-    timeComplexity: "Your current approach has O(n²) time complexity. Can you optimize it?",
-  };
-
-  // Simple keyword-based response (replace with AI)
-  if (userMessage.toLowerCase().includes("hint")) {
-    return responses.hint;
-  } else if (userMessage.toLowerCase().includes("clarify") || userMessage.toLowerCase().includes("question")) {
-    return responses.clarification;
-  } else if (code && code.length > 50) {
-    return responses.codeReview;
-  } else {
-    return responses.encouragement;
-  }
-};
-
-// Helper function to evaluate code (placeholder)
-const evaluateCode = async (code, language, problem) => {
-  // This is a placeholder. In production, integrate with code execution engine
-  // like Judge0, Piston API, or custom sandboxed execution
-  
-  // Simulate test case results
-  const totalTests = problem.hiddenTestCases?.length || 5;
-  const passedTests = Math.floor(Math.random() * totalTests) + 1;
-  const success = passedTests === totalTests;
-  
-  return {
-    success,
-    passedTests,
-    totalTests,
-    error: success ? null : "Expected output doesn't match actual output for test case 3",
-    feedback: success 
-      ? "Great! Your solution passes all test cases." 
-      : "Your solution has some issues. Review your logic and try again.",
-  };
-};
-
-// Helper function to generate AI feedback on solution
-const generateSolutionFeedback = async (code, language, problem, testResults) => {
-  // Placeholder AI feedback
-  const score = (testResults.passedTests / testResults.totalTests) * 100;
-  
-  const feedback = {
-    score: Math.round(score),
-    feedback: testResults.success 
-      ? "Excellent work! Your solution is correct and handles the test cases well."
-      : `Your solution passed ${testResults.passedTests}/${testResults.totalTests} test cases. Review the failing cases.`,
-    strengths: [
-      "Clear variable naming",
-      "Good code structure",
-    ],
-    improvements: testResults.success ? [] : [
-      "Consider edge cases more carefully",
-      "Optimize time complexity",
-    ],
-    timeComplexity: "O(n)",
-    spaceComplexity: "O(1)",
-  };
-  
-  return feedback;
-};
+const {
+  runTestCases,
+  ExecutionConfigError,
+  ExecutionServiceError,
+} = require("../utils/executionClient");
+const {
+  generateAIResponse,
+  generateSolutionFeedback,
+  generateInterviewSummary,
+  isConfigured: isAIConfigured
+} = require("../utils/aiService");
 
 // Create new interview session
 exports.createInterview = async (req, res) => {
@@ -210,7 +151,7 @@ exports.sendMessage = async (req, res) => {
     const interview = await Interview.findOne({
       _id: sessionId,
       userId,
-    });
+    }).populate('questions');
 
     if (!interview) {
       return res.status(404).json({
@@ -225,8 +166,18 @@ exports.sendMessage = async (req, res) => {
       content: message,
     });
 
-    // Generate AI response
-    const aiResponse = await generateAIResponse(interview, message, code);
+    // Get current problem for context
+    const currentProblem = interview.questions[interview.currentQuestionIndex];
+
+    // Build context for AI
+    const context = {
+      problem: currentProblem,
+      interviewType: interview.interviewType,
+      conversationHistory: interview.messages.slice(-10) // Last 10 messages for context
+    };
+
+    // Generate AI response using the real AI service
+    const aiResponse = await generateAIResponse(context, message, code);
 
     // Add AI response
     interview.messages.push({
@@ -249,6 +200,18 @@ exports.sendMessage = async (req, res) => {
   }
 };
 
+const buildExecutionPayload = (executionResults, hideHiddenInputs) =>
+  executionResults.results.map((r) => ({
+    index: r.index,
+    passed: r.passed,
+    isHidden: r.isHidden,
+    stdout: r.stdout,
+    stderr: r.stderr,
+    timeMs: r.timeMs,
+    input: r.isHidden && hideHiddenInputs ? undefined : r.input,
+    expectedOutput: r.isHidden && hideHiddenInputs ? undefined : r.expectedOutput,
+  }));
+
 // Run code
 exports.runCode = async (req, res) => {
   try {
@@ -269,18 +232,29 @@ exports.runCode = async (req, res) => {
     }
 
     const currentProblem = interview.questions[interview.currentQuestionIndex];
-    
-    // Evaluate code
-    const results = await evaluateCode(code, language, currentProblem);
+    const sampleTests = currentProblem.sampleTestCases?.length
+      ? currentProblem.sampleTestCases
+      : currentProblem.hiddenTestCases;
+
+    if (!sampleTests || sampleTests.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No test cases configured for this question",
+      });
+    }
+
+    const execution = await runTestCases({ code, language, testCases: sampleTests });
 
     res.json({
-      success: results.success,
-      passedTests: results.passedTests,
-      totalTests: results.totalTests,
-      error: results.error,
-      feedback: results.feedback,
+      success: execution.passedCount === execution.totalTests,
+      passedTests: execution.passedCount,
+      totalTests: execution.totalTests,
+      results: buildExecutionPayload(execution, true),
     });
   } catch (error) {
+    if (error instanceof ExecutionConfigError || error instanceof ExecutionServiceError) {
+      return res.status(error.status || 500).json({ success: false, message: error.message });
+    }
     console.error("Run code error:", error);
     res.status(500).json({
       success: false,
@@ -309,9 +283,25 @@ exports.submitSolution = async (req, res) => {
     }
 
     const currentProblem = interview.questions[questionIndex];
-    
-    // Evaluate code
-    const testResults = await evaluateCode(code, language, currentProblem);
+
+    const testCases = [
+      ...(currentProblem.sampleTestCases || []),
+      ...(currentProblem.hiddenTestCases || []),
+    ];
+
+    if (testCases.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No test cases configured for this question",
+      });
+    }
+
+    const execution = await runTestCases({ code, language, testCases });
+    const testResults = {
+      passedTests: execution.passedCount,
+      totalTests: execution.totalTests,
+      success: execution.passedCount === execution.totalTests,
+    };
     const feedback = await generateSolutionFeedback(code, language, currentProblem, testResults);
 
     // Update response
@@ -341,6 +331,9 @@ exports.submitSolution = async (req, res) => {
         success: true,
         feedback: feedback.feedback,
         hasNextQuestion: true,
+        passedTests: execution.passedCount,
+        totalTests: execution.totalTests,
+        results: buildExecutionPayload(execution, true),
         nextQuestionIndex: questionIndex + 1,
         nextQuestion: {
           title: nextQuestion.title,
@@ -356,10 +349,16 @@ exports.submitSolution = async (req, res) => {
       res.json({
         success: true,
         feedback: "Great job completing all questions! Let's review your performance.",
+        passedTests: execution.passedCount,
+        totalTests: execution.totalTests,
+        results: buildExecutionPayload(execution, true),
         hasNextQuestion: false,
       });
     }
   } catch (error) {
+    if (error instanceof ExecutionConfigError || error instanceof ExecutionServiceError) {
+      return res.status(error.status || 500).json({ success: false, message: error.message });
+    }
     console.error("Submit solution error:", error);
     res.status(500).json({
       success: false,
@@ -446,12 +445,23 @@ exports.endInterview = async (req, res) => {
     interview.generateSummary();
     interview.generateRecommendations();
     
-    // Generate detailed AI feedback
-    interview.detailedFeedback = `Based on your performance, you demonstrated ${
-      interview.overallScore >= 80 ? "strong" : interview.overallScore >= 60 ? "adequate" : "developing"
-    } problem-solving abilities. Your code quality and communication could be enhanced with more practice. Focus on the areas highlighted in the recommendations to improve your interview performance.`;
+    // Generate detailed AI feedback using the AI service
+    try {
+      interview.detailedFeedback = await generateInterviewSummary(interview);
+    } catch (error) {
+      console.error('Error generating AI summary:', error);
+      interview.detailedFeedback = `Based on your performance, you demonstrated ${
+        interview.overallScore >= 80 ? "strong" : interview.overallScore >= 60 ? "adequate" : "developing"
+      } problem-solving abilities. Your code quality and communication could be enhanced with more practice. Focus on the areas highlighted in the recommendations to improve your interview performance.`;
+    }
 
     await interview.save();
+
+    // Check and unlock achievements after completing interview
+    const { checkAndUnlockAchievements } = require('./achievementController');
+    checkAndUnlockAchievements(userId).catch(err => {
+      console.error('Error checking achievements:', err);
+    });
 
     res.json({
       success: true,

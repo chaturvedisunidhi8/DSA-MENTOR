@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["client", "superadmin"],
+      enum: ["client", "mentor", "superadmin"],
       default: "client",
     },
     roleId: {
@@ -151,6 +151,20 @@ const userSchema = new mongoose.Schema(
         score: Number,
       },
     ],
+    // Mentor-specific fields
+    mentorInfo: {
+      students: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }],
+      organization: String,
+      specializations: [String],
+      yearsOfExperience: Number,
+      isVerified: {
+        type: Boolean,
+        default: false
+      }
+    }
   },
   {
     timestamps: true,

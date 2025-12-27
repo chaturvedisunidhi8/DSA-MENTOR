@@ -1,5 +1,11 @@
 const Problem = require("../models/Problem");
 const User = require("../models/User");
+const {
+  runTestCases,
+  ExecutionConfigError,
+  ExecutionServiceError,
+} = require("../utils/executionClient");
+const { checkAndUnlockAchievements } = require("./achievementController");
 
 // Get all problems (with filters)
 exports.getAllProblems = async (req, res) => {
@@ -189,6 +195,63 @@ exports.getAllProblemsAdmin = async (req, res) => {
     });
   }
 };
+
+// Run code against sample test cases (no stats mutation)
+exports.runProblem = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { code, language } = req.body;
+
+    const problem = await Problem.findOne({ slug, isActive: true }).select(
+      "sampleTestCases hiddenTestCases title"
+    );
+
+    if (!problem) {
+      return res.status(404).json({
+        success: false,
+        message: "Problem not found",
+      });
+    }
+
+    const sampleTests = problem.sampleTestCases || [];
+
+    if (sampleTests.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No sample tests available for this problem",
+      });
+    }
+
+    const execution = await runTestCases({ code, language, testCases: sampleTests });
+    const payloadResults = execution.results.map((r) => ({
+      index: r.index,
+      passed: r.passed,
+      isHidden: r.isHidden,
+      stdout: r.stdout,
+      stderr: r.stderr,
+      timeMs: r.timeMs,
+      input: r.input,
+      expectedOutput: r.expectedOutput,
+    }));
+
+    res.status(200).json({
+      success: execution.passedCount === execution.totalTests,
+      passedTests: execution.passedCount,
+      totalTests: execution.totalTests,
+      results: payloadResults,
+    });
+  } catch (error) {
+    if (error instanceof ExecutionConfigError || error instanceof ExecutionServiceError) {
+      return res.status(error.status || 500).json({ success: false, message: error.message });
+    }
+    console.error("Run problem error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error running code",
+      error: error.message,
+    });
+  }
+};
 // Get problem stats
 exports.getProblemStats = async (req, res) => {
   try {
@@ -252,7 +315,6 @@ exports.submitProblem = async (req, res) => {
     const { code, language } = req.body;
     const userId = req.user.id;
 
-    // Find the problem
     const problem = await Problem.findOne({ slug, isActive: true });
     if (!problem) {
       return res.status(404).json({
@@ -261,7 +323,6 @@ exports.submitProblem = async (req, res) => {
       });
     }
 
-    // Find the user
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
@@ -270,18 +331,26 @@ exports.submitProblem = async (req, res) => {
       });
     }
 
-    // Check if problem was already solved
     const alreadySolved = user.solvedProblems.some(
       (sp) => sp.problemId.toString() === problem._id.toString()
     );
 
-    // Simple code execution simulation (replace with actual execution engine)
-    const totalTests = problem.hiddenTestCases?.length || problem.sampleTestCases?.length || 5;
-    const passedTests = code && code.length > 20 ? totalTests : Math.floor(totalTests * 0.6);
-    const success = passedTests === totalTests;
-    const score = Math.round((passedTests / totalTests) * 100);
+    const testCases = [
+      ...(problem.sampleTestCases || []),
+      ...(problem.hiddenTestCases || []),
+    ];
 
-    // Update problem stats
+    if (testCases.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No test cases configured for this problem",
+      });
+    }
+
+    const execution = await runTestCases({ code, language, testCases });
+    const success = execution.passedCount === execution.totalTests;
+    const score = Math.round((execution.passedCount / execution.totalTests) * 100);
+
     problem.stats.totalSubmissions += 1;
     if (success) {
       problem.stats.acceptedSubmissions += 1;
@@ -289,7 +358,6 @@ exports.submitProblem = async (req, res) => {
     problem.stats.totalAttempts += 1;
     await problem.save();
 
-    // If successful and not already solved, add to user's solved problems
     if (success && !alreadySolved) {
       user.solvedProblems.push({
         problemId: problem._id,
@@ -297,30 +365,51 @@ exports.submitProblem = async (req, res) => {
         score: score,
       });
       user.problemsSolved += 1;
-      
-      // Update accuracy
+
       const totalSolved = user.solvedProblems.length;
-      const avgScore = user.solvedProblems.reduce((sum, sp) => sum + (sp.score || 0), 0) / totalSolved;
+      const avgScore =
+        user.solvedProblems.reduce((sum, sp) => sum + (sp.score || 0), 0) /
+        totalSolved;
       user.accuracy = Math.round(avgScore);
-      
+
       await user.save();
+
+      // Check and unlock achievements after solving a new problem
+      checkAndUnlockAchievements(userId).catch(err => {
+        console.error('Error checking achievements:', err);
+      });
     }
+
+    const payloadResults = execution.results.map((r) => ({
+      index: r.index,
+      passed: r.passed,
+      isHidden: r.isHidden,
+      stdout: r.stdout,
+      stderr: r.stderr,
+      timeMs: r.timeMs,
+      input: r.isHidden ? undefined : r.input,
+      expectedOutput: r.isHidden ? undefined : r.expectedOutput,
+    }));
 
     res.status(200).json({
       success: true,
       passed: success,
       score,
-      passedTests,
-      totalTests,
+      passedTests: execution.passedCount,
+      totalTests: execution.totalTests,
+      results: payloadResults,
       message: success
         ? alreadySolved
           ? "Problem solved again! Great job!"
           : "Congratulations! Problem solved successfully!"
-        : `Solution failed. Passed ${passedTests}/${totalTests} test cases.`,
+        : `Solution failed. Passed ${execution.passedCount}/${execution.totalTests} test cases.`,
       alreadySolved,
       newlySolved: success && !alreadySolved,
     });
   } catch (error) {
+    if (error instanceof ExecutionConfigError || error instanceof ExecutionServiceError) {
+      return res.status(error.status || 500).json({ success: false, message: error.message });
+    }
     console.error("Submit problem error:", error);
     res.status(500).json({
       success: false,
