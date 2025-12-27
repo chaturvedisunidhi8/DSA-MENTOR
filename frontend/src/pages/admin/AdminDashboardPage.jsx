@@ -114,6 +114,10 @@ const AdminDashboardPage = () => {
             <span className="action-icon">📝</span>
             <span>Create Problem</span>
           </button>
+          <button className="action-card" onClick={() => navigate("/dashboard/admin/bulk-upload")}>
+            <span className="action-icon">📤</span>
+            <span>Bulk Upload Problems</span>
+          </button>
           <button className="action-card" onClick={() => navigate("/dashboard/admin/reports")}>
             <span className="action-icon">📊</span>
             <span>Generate Report</span>

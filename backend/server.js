@@ -1,4 +1,6 @@
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -6,6 +8,7 @@ const path = require("path");
 const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const connectDB = require("./config/db");
+const { initializeStudyRoomSocket } = require('./utils/studyRoomSocket');
 const authRoutes = require("./routes/auth");
 const dashboardRoutes = require("./routes/dashboard");
 const problemRoutes = require("./routes/problems");
@@ -19,6 +22,7 @@ const careerTrackRoutes = require("./routes/careerTracks");
 const discussionRoutes = require("./routes/discussions");
 const leaderboardRoutes = require("./routes/leaderboard");
 const mentorRoutes = require("./routes/mentor");
+const portfolioRoutes = require("./routes/portfolio");
 
 // Load environment variables
 dotenv.config();
@@ -128,6 +132,11 @@ app.use("/api/career-tracks", careerTrackRoutes);
 app.use("/api/discussions", discussionRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/mentor", mentorRoutes);
+app.use("/api/portfolio", portfolioRoutes);
+app.use("/api/social", require('./routes/social'));
+app.use("/api/certifications", require('./routes/certifications'));
+app.use("/api/contests", require('./routes/contests'));
+app.use("/api/study-rooms", require('./routes/studyRooms'));
 
 // Health check with database status
 app.get("/api/health", async (req, res) => {
@@ -163,8 +172,23 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true
+  }
+});
+
+// Initialize study room WebSocket handlers
+initializeStudyRoomSocket(io);
+
+server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV}`);
   console.log(`🌐 Frontend URL: ${process.env.CLIENT_URL}`);
+  console.log(`🔌 WebSocket server initialized`);
 });

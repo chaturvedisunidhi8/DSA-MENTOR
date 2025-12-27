@@ -1,0 +1,359 @@
+.interview-frequency-section {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.frequency-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.frequency-title h3 {
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.frequency-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.report-button {
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.report-button:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+/* Report Form */
+.report-form-container {
+  background: var(--hover-bg);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border: 2px solid var(--border-color);
+}
+
+.report-form h4 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.form-help {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.submit-button {
+  width: 100%;
+  padding: 1rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.submit-button:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Frequency Data Display */
+.frequency-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  background: var(--hover-bg);
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.summary-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+/* Top Companies */
+.top-companies {
+  margin-bottom: 2rem;
+}
+
+.top-companies h4 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.companies-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.company-item {
+  display: grid;
+  grid-template-columns: 40px 1fr 2fr 60px;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: var(--hover-bg);
+  border-radius: 6px;
+  transition: transform 0.2s;
+}
+
+.company-item:hover {
+  transform: translateX(4px);
+}
+
+.company-rank {
+  font-weight: bold;
+  color: var(--primary-color);
+  text-align: center;
+}
+
+.company-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.company-bar {
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.company-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.company-count {
+  text-align: right;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Round Distribution */
+.round-distribution {
+  margin-bottom: 2rem;
+}
+
+.round-distribution h4 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.rounds-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.round-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--hover-bg);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.round-name {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.round-count {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+/* Recent Interviews */
+.recent-interviews {
+  margin-bottom: 1rem;
+}
+
+.recent-interviews h4 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.interviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.interview-item {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 2fr 1.5fr;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--hover-bg);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  align-items: center;
+}
+
+.interview-company {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.interview-date {
+  color: var(--text-secondary);
+}
+
+.interview-position {
+  color: var(--text-primary);
+}
+
+.interview-round {
+  padding: 0.25rem 0.75rem;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* No Data State */
+.no-data {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-secondary);
+}
+
+.no-data p:first-child {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.frequency-loading {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .interview-frequency-section {
+    padding: 1.5rem;
+  }
+
+  .frequency-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .report-button {
+    width: 100%;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .company-item {
+    grid-template-columns: 30px 1fr 50px;
+    gap: 0.5rem;
+  }
+
+  .company-bar {
+    grid-column: 1 / -1;
+    margin-top: 0.5rem;
+  }
+
+  .interview-item {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .interview-round {
+    width: fit-content;
+  }
+}

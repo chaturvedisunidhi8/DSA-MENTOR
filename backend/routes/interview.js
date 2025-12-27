@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { authenticate } = require("../middleware/auth");
 const interviewController = require("../controllers/interviewController");
+const interviewReplayController = require("../controllers/interviewReplayController");
 
 // All routes require authentication
 router.use(authenticate);
@@ -35,5 +36,10 @@ router.get("/history", interviewController.getInterviewHistory);
 
 // Get interview statistics for user
 router.get("/stats", interviewController.getInterviewStats);
+
+// Interview Replay Features
+router.get("/replays", interviewReplayController.getAvailableReplays);
+router.get("/replay/:interviewId", interviewReplayController.getInterviewReplay);
+router.get("/replay/:interviewId/analysis", interviewReplayController.generateReplayAnalysis);
 
 module.exports = router;

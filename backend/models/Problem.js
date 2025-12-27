@@ -88,6 +88,40 @@ const problemSchema = new mongoose.Schema(
         default: 0,
       },
     },
+    // Crowdsourced interview frequency data
+    interviewReports: [{
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+      },
+      company: {
+        type: String,
+        required: true,
+        trim: true
+      },
+      interviewDate: {
+        type: Date,
+        required: true
+      },
+      position: {
+        type: String,
+        trim: true
+      },
+      interviewRound: {
+        type: String,
+        enum: ['Phone Screen', 'Technical Round 1', 'Technical Round 2', 'Onsite', 'Final Round', 'Other'],
+        default: 'Other'
+      },
+      reportedAt: {
+        type: Date,
+        default: Date.now
+      },
+      verified: {
+        type: Boolean,
+        default: false
+      }
+    }],
     isActive: {
       type: Boolean,
       default: true,
@@ -117,6 +151,36 @@ problemSchema.virtual("acceptanceRate").get(function () {
     (this.stats.acceptedSubmissions / this.stats.totalSubmissions) * 100
   );
 });
+
+// Virtual for recent interview frequency (last 90 days)
+problemSchema.virtual("recentFrequency").get(function () {
+  if (!this.interviewReports || this.interviewReports.length === 0) return [];
+  
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+  
+  const recentReports = this.interviewReports.filter(
+    report => report.interviewDate >= ninetyDaysAgo
+  );
+  
+  // Group by company and count
+  const frequencyByCompany = {};
+  recentReports.forEach(report => {
+    const company = report.company;
+    frequencyByCompany[company] = (frequencyByCompany[company] || 0) + 1;
+  });
+  
+  // Convert to array and sort by frequency
+  return Object.entries(frequencyByCompany)
+    .map(([company, count]) => ({ company, count }))
+    .sort((a, b) => b.count - a.count);
+});
+
+// Virtual for total times asked
+problemSchema.virtual("totalTimesAsked").get(function () {
+  return this.interviewReports ? this.interviewReports.length : 0;
+});
+
 problemSchema.set("toJSON", { virtuals: true });
 problemSchema.set("toObject", { virtuals: true });
 
@@ -128,5 +192,7 @@ problemSchema.index({ isActive: 1 }); // Filter active problems
 problemSchema.index({ 'stats.acceptedSubmissions': -1 }); // Sort by popularity
 problemSchema.index({ difficulty: 1, topics: 1, isActive: 1 }); // Compound for complex queries
 problemSchema.index({ createdAt: -1 }); // Sort by creation date
+problemSchema.index({ 'interviewReports.company': 1 }); // Query by company
+problemSchema.index({ 'interviewReports.interviewDate': -1 }); // Sort by interview date
 
 module.exports = mongoose.model("Problem", problemSchema);

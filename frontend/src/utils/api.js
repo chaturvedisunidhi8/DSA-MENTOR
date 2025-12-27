@@ -154,4 +154,140 @@ export const profileAPI = {
   },
 };
 
+// Discussion API functions
+export const discussionAPI = {
+  // Get discussions for a problem
+  getDiscussionsByProblem: async (problemId, params = {}) => {
+    const response = await api.get(`/discussions/problem/${problemId}`, { params });
+    return response.data;
+  },
+
+  // Get single discussion
+  getDiscussion: async (discussionId) => {
+    const response = await api.get(`/discussions/${discussionId}`);
+    return response.data;
+  },
+
+  // Create discussion
+  createDiscussion: async (data) => {
+    const response = await api.post('/discussions', data);
+    return response.data;
+  },
+
+  // Update discussion
+  updateDiscussion: async (discussionId, data) => {
+    const response = await api.put(`/discussions/${discussionId}`, data);
+    return response.data;
+  },
+
+  // Delete discussion
+  deleteDiscussion: async (discussionId) => {
+    const response = await api.delete(`/discussions/${discussionId}`);
+    return response.data;
+  },
+
+  // Vote on discussion
+  voteDiscussion: async (discussionId, voteType) => {
+    const response = await api.post(`/discussions/${discussionId}/vote`, { voteType });
+    return response.data;
+  },
+
+  // Vote on reply
+  voteReply: async (discussionId, replyId, voteType) => {
+    const response = await api.post(`/discussions/${discussionId}/replies/${replyId}/vote`, { voteType });
+    return response.data;
+  },
+
+  // Add reply
+  addReply: async (discussionId, content) => {
+    const response = await api.post(`/discussions/${discussionId}/replies`, { content });
+    return response.data;
+  },
+
+  // Update reply
+  updateReply: async (discussionId, replyId, content) => {
+    const response = await api.put(`/discussions/${discussionId}/replies/${replyId}`, { content });
+    return response.data;
+  },
+
+  // Delete reply
+  deleteReply: async (discussionId, replyId) => {
+    const response = await api.delete(`/discussions/${discussionId}/replies/${replyId}`);
+    return response.data;
+  },
+
+  // Mark solution as accepted
+  markAsAccepted: async (discussionId) => {
+    const response = await api.post(`/discussions/${discussionId}/accept`);
+    return response.data;
+  },
+
+  // Flag discussion
+  flagDiscussion: async (discussionId, reason) => {
+    const response = await api.post(`/discussions/${discussionId}/flag`, { reason });
+    return response.data;
+  },
+};
+
+// Social/Community API functions
+export const socialAPI = {
+  // Get user profile
+  getUserProfile: async (username) => {
+    const response = await api.get(`/social/profile/${username}`);
+    return response.data;
+  },
+
+  // Follow user
+  followUser: async (userId) => {
+    const response = await api.post(`/social/follow/${userId}`);
+    return response.data;
+  },
+
+  // Unfollow user
+  unfollowUser: async (userId) => {
+    const response = await api.delete(`/social/follow/${userId}`);
+    return response.data;
+  },
+
+  // Get followers list
+  getFollowers: async (userId, page = 1, limit = 20) => {
+    const response = await api.get(`/social/followers/${userId}`, {
+      params: { page, limit }
+    });
+    return response.data;
+  },
+
+  // Get following list
+  getFollowing: async (userId, page = 1, limit = 20) => {
+    const response = await api.get(`/social/following/${userId}`, {
+      params: { page, limit }
+    });
+    return response.data;
+  },
+
+  // Get activity feed
+  getActivityFeed: async (page = 1, limit = 20) => {
+    const response = await api.get('/social/feed', {
+      params: { page, limit }
+    });
+    return response.data;
+  },
+
+  // Search users
+  searchUsers: async (query, page = 1, limit = 20) => {
+    const response = await api.get('/social/search', {
+      params: { query, page, limit }
+    });
+    return response.data;
+  },
+
+  // Get suggested users to follow
+  getSuggestedUsers: async (limit = 10) => {
+    const response = await api.get('/social/suggestions', {
+      params: { limit }
+    });
+    return response.data;
+  },
+};
+
 export default api;

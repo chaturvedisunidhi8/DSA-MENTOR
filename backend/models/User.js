@@ -164,7 +164,45 @@ const userSchema = new mongoose.Schema(
         type: Boolean,
         default: false
       }
-    }
+    },
+    // Portfolio settings
+    portfolioPublic: {
+      type: Boolean,
+      default: true
+    },
+    // Social/Community features
+    following: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    followers: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    recentActivity: [{
+      type: {
+        type: String,
+        enum: ['solved_problem', 'earned_achievement', 'started_track', 'completed_interview', 'posted_discussion']
+      },
+      problemId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Problem'
+      },
+      trackId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'CareerTrack'
+      },
+      discussionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Discussion'
+      },
+      achievementId: String,
+      details: String,
+      timestamp: {
+        type: Date,
+        default: Date.now
+      }
+    }]
   },
   {
     timestamps: true,
@@ -195,5 +233,8 @@ userSchema.index({ lastActive: -1 }); // For sorting by activity
 userSchema.index({ createdAt: -1 }); // For sorting by registration date
 userSchema.index({ 'problemsSolved': -1, 'accuracy': -1 }); // Compound index for leaderboards
 userSchema.index({ refreshToken: 1 }, { sparse: true }); // Sparse index for refresh tokens
+userSchema.index({ followers: 1 }); // For follow queries
+userSchema.index({ following: 1 }); // For following queries
+userSchema.index({ 'recentActivity.timestamp': -1 }); // For activity feed sorting
 
 module.exports = mongoose.model("User", userSchema);

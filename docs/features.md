@@ -18,10 +18,10 @@
 - **Dashboard**: Personal stats (problems solved, accuracy, streak, level, focus areas), recent problems, activity heatmap, quick actions to Practice/Interview/Analytics/Mentor, and interview banner with best/avg scores.
 - **Practice Library**: Topic/difficulty filters, search, acceptance info, difficulty badges, topic tags, card grid; navigation into problem details.
 - **Problem Detail**: Rich description, input/output formats, constraints, sample cases, hints, topics/companies, acceptance and attempts, starter code per JS/Python/Java/C++; run/submit now call backend executor (sample runs at `/problems/:slug/run`, full judging via `/problems/:slug/submit`) with per-test stdout/stderr surfaced.
-- **AI Interview Flow** (OpenAI GPT-4 powered with intelligent keyword fallback):
+- **AI Interview Flow** (100% Local Pattern-Matching AI):
   - **Setup**: Choose interview type (conversational/timed/mock), difficulty/mixed, topics multiselect, duration, question count; creates session via `/interview/create`.
-  - **Live Session**: Chat with AI interviewer, request hints, code editor with language switcher, run code against sample/visible cases, submit per question for full judging, timer, mobile tabs.
-  - **Completion**: Auto end or manual end → results page with overall score, metrics (accuracy, questions solved, time, hints), breakdown per competency, per-question feedback, complexities, strengths/improvements, recommendations, retake/back actions.
+  - **Live Session**: Chat with local AI interviewer using pattern-matching and intent detection, request hints with context-aware responses, code editor with language switcher, run code against sample/visible cases using local sandbox, submit per question for full judging, timer, mobile tabs.
+  - **Completion**: Auto end or manual end → results page with overall score, metrics (accuracy, questions solved, time, hints), breakdown per competency, per-question feedback with local complexity analysis, strengths/improvements from code structure analysis, recommendations, retake/back actions.
   - **History/Stats**: `/interview/history` and `/interview/stats` for totals, averages, best score, topic distribution.
 - **Analytics**: User-level stats cards, interview performance + topic distribution, focus areas; upcoming advanced analytics section.
 - **Achievements**: Definitions + user progress with filters (all/unlocked/locked/Practice/Progress), badge counts (bronze/silver/gold/platinum), progress bars; data from `/achievements/user`; **auto-unlocks** on problem solve, interview completion, and career track/lesson completion (Track Starter, Track Master, Dedicated Learner badges).
@@ -59,23 +59,50 @@
 - **Mentor API**: Dashboard overview with student roster and aggregate stats. Add/remove students by email. Get detailed student progress including problem stats by difficulty/topic, track progress, and achievements. Assign career tracks to multiple students. Assign problem sets with due dates. Student comparison endpoint for performance rankings.
 - **Discussion Model**: Added schema with problem-linked threads, votes (upvotes/downvotes), nested replies, tags, hot/top/new/trending sorting algorithms. Vote tracking per user to prevent duplicates. Accepted answer marking. Flag system for moderation.
 - **Discussion API**: Get discussions by problem with sorting (hot/top/new/trending), create discussions, vote on discussions and replies, add nested replies, mark answers as accepted, flag inappropriate content. Full CRUD operations. Routes registered at `/api/discussions`.
-- **Interview API**: Create session, get session, chat message with AI interviewer (OpenAI GPT-4 + fallback), run code against sample/visible cases, submit per question with executor-backed judging plus scoring/feedback, hints, end session, results summary with AI-generated feedback, history, stats; AI responses contextual and adaptive.
+- **Interview API**: Create session, get session, chat message with local AI interviewer using pattern-matching, run code against sample/visible cases using local sandbox, submit per question with local code execution + scoring/feedback, hints with context-aware templates, end session, results summary with local code analysis, history, stats; AI responses contextual using intent detection and knowledge base.
 - **Achievements API**: Definitions and user progress, badge tracking, unlock logic (problems solved, streaks, interviews, speed/accuracy, time-of-day, career tracks). **Auto-trigger system** that checks and unlocks achievements on problem submission, interview completion, and track/lesson completion. 15 total achievements including 3 track-specific badges.
 - Reports API: protected by `view:reports`, generates user-activity, problem-performance, system-usage, and user-progress datasets.
 - Dashboard API: client stats, superadmin stats/user list, public landing stats, activity graph, recent activity feed.
 - Admin settings API: get/update settings, backup/restore placeholders; returns DB stats.
 - Auth/profile API: register/login/refresh/logout, admin user CRUD, current profile, update own profile, resume upload/parse, profile picture upload/delete; permissions derived from roles.
 - Middleware: `authenticate` JWT guard, `checkPermission`, `roleCheck`; cache layer stub; file uploads via Multer (profiles/resumes) with validation; audit logger hook for actions.
-- **Utilities**: Token utilities for access/refresh generation/verification; resume parser stub for PDF extraction; activity/metrics aggregates in controllers; **AI service** with OpenAI SDK integration supporting contextual interview chat, code feedback with JSON-structured reviews, and interview summaries. Graceful keyword-based fallback when API key not configured.
+- **Utilities**: Token utilities for access/refresh generation/verification; resume parser stub for PDF extraction; activity/metrics aggregates in controllers; **Local AI service** with pattern-matching intelligence supporting contextual interview chat (9 intent types), code feedback with structure analysis and quality scoring, complexity estimation, and interview summaries. Zero external dependencies - runs completely offline.
 - **Scripts**: Seed roles, create/reset superadmin helpers for bootstrap; uploads storage folders (profiles/resumes).
 
-## Technical Infrastructure
-- **AI Integration**: OpenAI SDK with GPT-4 for interview conversations and code feedback. Intelligent fallback system using keyword detection when API key unavailable. Context-aware prompts that adapt to interview type and user skill level.
+## Technical Infrastructure - 100% Self-Hosted Architecture
+
+### 🚀 Zero External Dependencies
+**Complete Platform Independence** - No OpenAI API keys, no external code execution services, no third-party AI providers.
+
+### Local AI System
+- **Pattern-Matching Intelligence**: Rule-based AI using regex intent detection with 9 interview scenario patterns
+- **Interview Knowledge Base**: Curated response templates for greetings, hints (data structures/algorithms/complexity/edge cases), encouragement, clarifications
+- **Intent Detection**: Intelligent pattern matching for needsHint, needsClarification, needsApproach, seekingValidation, complexityQuestion, edgeCaseQuestion, dataStructureQuestion, greeting, general
+- **Code Analysis Engine**: Local code structure examination detecting loops, conditionals, recursion, functions, data structures, comments, naming conventions
+- **Complexity Estimation**: Algorithm-based Big O calculation from code patterns (nested loops → O(n²/n³), sorting → O(n log n), recursion → O(n), binary search → O(log n))
+- **Score Calculation**: Pass rate + code quality bonuses (comments +5, naming +5, data structures +5)
+- **Zero API Costs**: No monthly bills, unlimited usage, complete control over AI responses
+
+### Local Code Execution Sandbox
+- **Secure Native Execution**: Node.js child_process-based sandboxing with timeout controls and resource limits
+- **Multi-Language Support**: JavaScript (Node.js), Python (python3), Java (javac + java), C++ (g++ compilation)
+- **Security Features**: Isolated temp directories, 5-8 second timeout limits, 10MB output buffer caps, automatic cleanup
+- **Compilation Pipeline**: Automatic compilation for Java/C++ with error handling, direct execution for interpreted languages
+- **Test Judging**: Runs multiple test cases with stdin/stdout comparison, execution time tracking, exit code monitoring
+- **No External APIs**: Eliminates dependency on Piston, Judge0, or other paid execution services
+
+### Performance & Scale
 - **Indexing & Performance**: User model indexed on `problemsSolved` and `accuracy` for fast leaderboard queries. Discussion model uses virtual fields for vote scoring and hot ranking algorithm.
 - **Permissions System**: Extended with career track permissions (`create:tracks`, `update:tracks`, `delete:tracks`) and mentor permissions (`mentor:students`, `mentor:assignments`). Role-based access control throughout API.
 - **User Roles**: Three primary roles - `client` (students), `mentor` (instructors), `superadmin` (platform administrators). Mentor role includes dedicated fields for organization, students array, specializations, experience, and verification status.
 - **Rate Limiting**: API protection with 100 requests per 15 minutes. Auth endpoints limited to 10 attempts per 15 minutes with successful request skipping.
 - **Compression**: gzip enabled reducing bandwidth by ~70% for large payloads.
+
+### Cost Advantages
+- **Zero Monthly API Bills**: No OpenAI GPT-4 charges ($0.03/1K tokens = $30-300/month for 1,000 users eliminated)
+- **No Code Execution Fees**: Eliminated Judge0/Piston API costs
+- **Predictable Infrastructure**: Only MongoDB + Node.js server costs, fully scalable on own terms
+- **Free Tier Friendly**: Can run on single VPS without worrying about API overage charges
 
 ## Known Placeholders / Coming Soon
 - PDF report generation and DB backup/restore require external services.
@@ -85,3 +112,37 @@
 - Assignment tracking model for mentor-assigned problem sets.
 - Achievement toast notifications on unlock.
 - Real-time leaderboard updates via WebSockets.
+
+## 🆕 NEW FEATURES - Quick Wins Sprint
+
+### Problem Frequency Crowdsourcing (TIER 1)
+**What We Beat**: LeetCode charges $99/year for company frequency data
+- Users report which problems were asked in real interviews with company, date, round, position
+- Automatic duplicate prevention (same user + company + problem within 30 days)
+- Public frequency data showing "Asked 47 times by Google in last 90 days"
+- Top companies list with visual bars, round distribution, recent interview timeline
+- Frontend component with inline reporting form integrated into problem pages
+- API Endpoints: `POST /api/problems/:slug/report-interview`, `GET /api/problems/:slug/frequency`
+- Virtual fields: `recentFrequency`, `totalTimesAsked` calculated on-demand
+
+### Interview Replay Analysis (TIER 3)
+**What We Beat**: No platform offers session recording with AI-powered timeline analysis
+- Complete interview session replay with timestamped timeline of messages, code submissions, hints
+- AI-powered analysis generating critical moments, communication patterns, improvement areas
+- Insights dashboard showing total messages, hints used, avg time per problem, score breakdown
+- Endpoints: `GET /api/interview/replays` (list), `GET /api/interview/replay/:id` (timeline), `GET /api/interview/replay/:id/analysis` (AI analysis)
+- Analysis caching in Interview model to avoid regenerating expensive AI calls
+- Timeline includes: start/end events, user/AI messages with elapsed time, code submissions with results, hint requests
+
+### Public Portfolio Generator (TIER 2)
+**What We Beat**: No coding platform generates shareable public portfolios
+- Public profile pages at `@username` URLs showcasing user stats, solved problems, achievements
+- Statistics: problems solved, accuracy, streaks, level, interview scores
+- Difficulty breakdown (Easy/Medium/Hard), topic mastery top 10, recent activity feed
+- Social sharing buttons for LinkedIn/Twitter with pre-filled text
+- Privacy toggle (public/private portfolio)
+- JSON export for resume attachments or external use
+- API Endpoints: `GET /api/portfolio/:username` (public), `GET /api/portfolio/me/link` (shareable URLs), `PUT /api/portfolio/me/visibility` (toggle), `GET /api/portfolio/me/export` (JSON download)
+- User model field: `portfolioPublic` (boolean, default true)
+
+**Free Marketing**: Users share portfolio links on resumes → drives organic traffic

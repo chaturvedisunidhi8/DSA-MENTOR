@@ -5,12 +5,16 @@ const fs = require("fs");
 // Ensure uploads directories exist
 const resumeUploadDir = path.join(__dirname, "../uploads/resumes");
 const profileUploadDir = path.join(__dirname, "../uploads/profiles");
+const bulkUploadDir = path.join(__dirname, "../uploads/bulk");
 
 if (!fs.existsSync(resumeUploadDir)) {
   fs.mkdirSync(resumeUploadDir, { recursive: true });
 }
 if (!fs.existsSync(profileUploadDir)) {
   fs.mkdirSync(profileUploadDir, { recursive: true });
+}
+if (!fs.existsSync(bulkUploadDir)) {
+  fs.mkdirSync(bulkUploadDir, { recursive: true });
 }
 
 // Configure multer storage
@@ -19,6 +23,8 @@ const storage = multer.diskStorage({
     // Determine destination based on fieldname
     if (file.fieldname === "profilePicture") {
       cb(null, profileUploadDir);
+    } else if (file.fieldname === "bulkFile") {
+      cb(null, bulkUploadDir);
     } else {
       cb(null, resumeUploadDir);
     }
@@ -53,6 +59,23 @@ const fileFilter = (req, file, cb) => {
         false
       );
     }
+  } else if (file.fieldname === "bulkFile") {
+    const allowedTypes = [
+      "text/csv",
+      "application/json",
+      "application/vnd.ms-excel",
+      "text/plain"
+    ];
+    if (allowedTypes.includes(file.mimetype) || 
+        file.originalname.endsWith('.csv') || 
+        file.originalname.endsWith('.json')) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error("Invalid file type. Only CSV and JSON files are allowed for bulk upload."),
+        false
+      );
+    }
   } else {
     cb(null, true);
   }
@@ -63,7 +86,7 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB limit for bulk uploads
   },
 });
 

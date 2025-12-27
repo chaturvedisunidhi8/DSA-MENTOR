@@ -1,22 +1,37 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../utils/api";
+import useAuth from "../../hooks/useAuth";
+import DiscussionList from "../../components/discussions/DiscussionList";
+import ProblemSolution from "../../components/ProblemSolution";
 const ProblemDetailPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [problem, setProblem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState("javascript");
   const [code, setCode] = useState("");
   const [runResults, setRunResults] = useState(null);
   const [activeTab, setActiveTab] = useState("description");
+  const [userHasSolved, setUserHasSolved] = useState(false);
   
   useEffect(() => {
     let isMounted = true;
     if (isMounted && slug) {
       fetchProblem();
     }
-    return () => { isMounted = false; };
+    
+    // Listen for tab change events from ProblemSolution
+    const handleTabChange = (e) => {
+      setActiveTab(e.detail);
+    };
+    window.addEventListener('changeProblemTab', handleTabChange);
+    
+    return () => { 
+      isMounted = false;
+      window.removeEventListener('changeProblemTab', handleTabChange);
+    };
   }, [slug]);
   const fetchProblem = async () => {
     try {
@@ -24,6 +39,14 @@ const ProblemDetailPage = () => {
       const { data } = await api.get(`/problems/${slug}`);
       setProblem(data.data);
       setCode(data.data.starterCode?.[selectedLanguage] || "");
+      
+      // Check if user has solved this problem
+      if (user && user.solvedProblems) {
+        const hasSolved = user.solvedProblems.some(
+          sp => sp.problemId === data.data._id || sp.problemId?._id === data.data._id
+        );
+        setUserHasSolved(hasSolved);
+      }
     } catch (error) {
       console.error("Error fetching problem:", error);
       alert("Failed to fetch problem");
@@ -155,6 +178,12 @@ const ProblemDetailPage = () => {
               Solutions
             </button>
             <button
+              className={activeTab === "discussions" ? "active" : ""}
+              onClick={() => setActiveTab("discussions")}
+            >
+              💬 Discussions
+            </button>
+            <button
               className={activeTab === "submissions" ? "active" : ""}
               onClick={() => setActiveTab("submissions")}
             >
@@ -254,9 +283,17 @@ const ProblemDetailPage = () => {
                 </div>
               </>
             )}
-            {activeTab === "solutions" && (
+            {activeTab === "solutions" && problem && (
               <div className="solutions-tab">
-                <p>Solutions will be available after solving the problem.</p>
+                <ProblemSolution problem={problem} userHasSolved={userHasSolved} />
+              </div>
+            )}
+            {activeTab === "discussions" && problem && (
+              <div className="discussions-tab">
+                <DiscussionList 
+                  problemId={problem._id} 
+                  onDiscussionClick={(id) => console.log('Open discussion:', id)}
+                />
               </div>
             )}
             {activeTab === "submissions" && (

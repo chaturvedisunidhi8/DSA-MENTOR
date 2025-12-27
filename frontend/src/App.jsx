@@ -23,6 +23,7 @@ import SettingsPage from "./pages/client/SettingsPage";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import UsersPage from "./pages/admin/UsersPage";
 import ProblemsPage from "./pages/admin/ProblemsPage";
+import BulkUploadPage from "./pages/admin/BulkUploadPage";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
 import ReportsPage from "./pages/admin/ReportsPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
@@ -119,6 +120,7 @@ function AppRoutes() {
         <Route path="users" element={<UsersPage />} />
         <Route path="roles" element={<RolesPermissionsPage />} />
         <Route path="problems" element={<ProblemsPage />} />
+        <Route path="bulk-upload" element={<BulkUploadPage />} />
         <Route path="analytics" element={<AdminAnalyticsPage />} />
         <Route path="reports" element={<ReportsPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />

@@ -1,0 +1,32 @@
+title,description,difficulty,topics,companies,constraints,inputFormat,outputFormat,sampleInput1,sampleOutput1,sampleInput2,sampleOutput2
+"Two Sum","Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.","Easy","Array,Hash Table","Google,Amazon,Facebook,Microsoft,Apple","2 ≤ nums.length ≤ 10^4|-10^9 ≤ nums[i] ≤ 10^9|-10^9 ≤ target ≤ 10^9","First line: n and target. Second line: n space-separated integers","Two space-separated indices (0-indexed)","4 9
+2 7 11 15","0 1","3 6
+3 2 4","1 2"
+"Best Time to Buy and Sell Stock","You are given an array prices where prices[i] is the price of a given stock on the ith day. You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock. Return the maximum profit you can achieve from this transaction.","Easy","Array,Dynamic Programming","Amazon,Facebook,Microsoft,Bloomberg,Google","1 ≤ prices.length ≤ 10^5|0 ≤ prices[i] ≤ 10^4","First line: n. Second line: n space-separated prices","Single integer representing maximum profit","6
+7 1 5 3 6 4","5","5
+7 6 4 3 1","0"
+"Contains Duplicate","Given an integer array nums, return true if any value appears at least twice in the array, and return false if every element is distinct.","Easy","Array,Hash Table,Sorting","Google,Amazon,Microsoft,Adobe","1 ≤ nums.length ≤ 10^5|-10^9 ≤ nums[i] ≤ 10^9","First line: n. Second line: n space-separated integers","true or false","4
+1 2 3 1","true","4
+1 2 3 4","false"
+"Product of Array Except Self","Given an integer array nums, return an array answer such that answer[i] is equal to the product of all the elements of nums except nums[i]. You must write an algorithm that runs in O(n) time and without using the division operation.","Medium","Array,Prefix Sum","Amazon,Microsoft,Facebook,Apple,Google","2 ≤ nums.length ≤ 10^5|-30 ≤ nums[i] ≤ 30","First line: n. Second line: n space-separated integers","Space-separated integers representing the answer array","4
+1 2 3 4","24 12 8 6","5
+-1 1 0 -3 3","0 0 9 0 0"
+"Maximum Subarray","Given an integer array nums, find the contiguous subarray which has the largest sum and return its sum. A subarray is a contiguous part of an array.","Medium","Array,Dynamic Programming,Divide and Conquer","Microsoft,Amazon,LinkedIn,Apple,Google","1 ≤ nums.length ≤ 10^5|-10^4 ≤ nums[i] ≤ 10^4","First line: n. Second line: n space-separated integers","Single integer representing the maximum sum","9
+-2 1 -3 4 -1 2 1 -5 4","6","1
+5","5"
+"Maximum Product Subarray","Given an integer array nums, find a contiguous non-empty subarray within the array that has the largest product, and return the product.","Medium","Array,Dynamic Programming","Amazon,Microsoft,LinkedIn,Google","1 ≤ nums.length ≤ 2×10^4|-10 ≤ nums[i] ≤ 10","First line: n. Second line: n space-separated integers","Single integer representing the maximum product","3
+2 3 -2","6","4
+-2 0 -1 0","0"
+"Find Minimum in Rotated Sorted Array","Suppose an array of length n sorted in ascending order is rotated between 1 and n times. Given the sorted rotated array nums of unique elements, return the minimum element of this array.","Medium","Array,Binary Search","Amazon,Microsoft,Bloomberg","n == nums.length|1 ≤ n ≤ 5000|-5000 ≤ nums[i] ≤ 5000|All integers are unique","First line: n. Second line: n space-separated integers","Single integer representing the minimum element","5
+3 4 5 1 2","1","7
+4 5 6 7 0 1 2","0"
+"Search in Rotated Sorted Array","There is an integer array nums sorted in ascending order (with distinct values). Prior to being passed to your function, nums is possibly rotated at an unknown pivot index. Given the array nums after the possible rotation and an integer target, return the index of target if it is in nums, or -1 if it is not in nums.","Medium","Array,Binary Search","Amazon,Facebook,Microsoft,Bloomberg,Apple","1 ≤ nums.length ≤ 5000|-10^4 ≤ nums[i] ≤ 10^4|All values are unique","First line: n and target. Second line: n space-separated integers","Single integer representing the index, or -1","7 0
+4 5 6 7 0 1 2","4","7 3
+4 5 6 7 0 1 2","-1"
+"3Sum","Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0. The solution set must not contain duplicate triplets.","Medium","Array,Two Pointers,Sorting","Amazon,Facebook,Microsoft,Google,Adobe","3 ≤ nums.length ≤ 3000|-10^5 ≤ nums[i] ≤ 10^5","First line: n. Second line: n space-separated integers","Each line contains a triplet (space-separated)","6
+-1 0 1 2 -1 -4","-1 -1 2
+-1 0 1","3
+0 1 1","No solution"
+"Container With Most Water","You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the ith line are (i, 0) and (i, height[i]). Find two lines that together with the x-axis form a container, such that the container contains the most water. Return the maximum amount of water a container can store.","Medium","Array,Two Pointers,Greedy","Amazon,Facebook,Microsoft,Google","n == height.length|2 ≤ n ≤ 10^5|0 ≤ height[i] ≤ 10^4","First line: n. Second line: n space-separated heights","Single integer representing maximum area","9
+1 8 6 2 5 4 8 3 7","49","2
+1 1","1"

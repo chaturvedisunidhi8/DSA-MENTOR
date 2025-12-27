@@ -6,6 +6,9 @@ const {
   ExecutionServiceError,
 } = require("../utils/executionClient");
 const { checkAndUnlockAchievements } = require("./achievementController");
+const csv = require("csv-parser");
+const fs = require("fs");
+const path = require("path");
 
 // Get all problems (with filters)
 exports.getAllProblems = async (req, res) => {
@@ -372,6 +375,19 @@ exports.submitProblem = async (req, res) => {
         totalSolved;
       user.accuracy = Math.round(avgScore);
 
+      // Add to recent activity for social feed
+      user.recentActivity.unshift({
+        type: 'solved_problem',
+        problemId: problem._id,
+        details: `Solved ${problem.title} (${problem.difficulty})`,
+        timestamp: new Date()
+      });
+      
+      // Keep only last 50 activities
+      if (user.recentActivity.length > 50) {
+        user.recentActivity = user.recentActivity.slice(0, 50);
+      }
+
       await user.save();
 
       // Check and unlock achievements after solving a new problem
@@ -418,3 +434,416 @@ exports.submitProblem = async (req, res) => {
     });
   }
 };
+
+/**
+ * Report problem asked in real interview (crowdsourcing)
+ * @route POST /api/problems/:slug/report-interview
+ */
+exports.reportInterview = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { company, interviewDate, position, interviewRound } = req.body;
+    const userId = req.user._id;
+
+    if (!company || !interviewDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Company and interview date are required'
+      });
+    }
+
+    const problem = await Problem.findOne({ slug, isActive: true });
+    if (!problem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Problem not found'
+      });
+    }
+
+    // Check if user already reported this problem for the same company within 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const existingReport = problem.interviewReports.find(
+      report => report.userId.toString() === userId.toString() &&
+                report.company === company &&
+                report.interviewDate >= thirtyDaysAgo
+    );
+
+    if (existingReport) {
+      return res.status(400).json({
+        success: false,
+        message: 'You already reported this problem for this company recently'
+      });
+    }
+
+    // Add the report
+    problem.interviewReports.push({
+      userId,
+      company,
+      interviewDate: new Date(interviewDate),
+      position: position || '',
+      interviewRound: interviewRound || 'Other',
+      reportedAt: new Date(),
+      verified: false
+    });
+
+    await problem.save();
+
+    res.json({
+      success: true,
+      message: 'Thank you for contributing! Your report helps the community.',
+      totalReports: problem.interviewReports.length,
+      recentFrequency: problem.recentFrequency
+    });
+  } catch (error) {
+    console.error('Report interview error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error submitting report',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get interview frequency data for a problem
+ * @route GET /api/problems/:slug/frequency
+ */
+exports.getInterviewFrequency = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { days = 90 } = req.query;
+
+    const problem = await Problem.findOne({ slug, isActive: true })
+      .select('title slug interviewReports');
+
+    if (!problem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Problem not found'
+      });
+    }
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - parseInt(days));
+
+    const recentReports = problem.interviewReports.filter(
+      report => report.interviewDate >= cutoffDate
+    );
+
+    // Group by company
+    const frequencyByCompany = {};
+    const roundDistribution = {};
+    const positionData = {};
+
+    recentReports.forEach(report => {
+      // Company frequency
+      frequencyByCompany[report.company] = (frequencyByCompany[report.company] || 0) + 1;
+      
+      // Round distribution
+      roundDistribution[report.interviewRound] = (roundDistribution[report.interviewRound] || 0) + 1;
+      
+      // Position tracking
+      if (report.position) {
+        positionData[report.position] = (positionData[report.position] || 0) + 1;
+      }
+    });
+
+    // Sort companies by frequency
+    const topCompanies = Object.entries(frequencyByCompany)
+      .map(([company, count]) => ({ company, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    // Get most recent reports
+    const recentInterviews = recentReports
+      .sort((a, b) => b.interviewDate - a.interviewDate)
+      .slice(0, 5)
+      .map(report => ({
+        company: report.company,
+        date: report.interviewDate,
+        position: report.position,
+        round: report.interviewRound
+      }));
+
+    res.json({
+      success: true,
+      data: {
+        totalReports: problem.interviewReports.length,
+        recentReports: recentReports.length,
+        period: `Last ${days} days`,
+        topCompanies,
+        roundDistribution,
+        recentInterviews
+      }
+    });
+  } catch (error) {
+    console.error('Get frequency error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching frequency data',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Bulk upload problems from CSV or JSON file
+ * @route POST /api/problems/bulk-upload
+ */
+exports.bulkUploadProblems = async (req, res) => {
+  let filePath = null;
+  
+  try {
+    // Validate file upload
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded. Please upload a CSV or JSON file."
+      });
+    }
+
+    filePath = req.file.path;
+    const fileExtension = path.extname(req.file.originalname).toLowerCase();
+    
+    let problems = [];
+
+    // Parse file based on type
+    if (fileExtension === '.csv') {
+      problems = await parseCSVFile(filePath);
+    } else if (fileExtension === '.json') {
+      problems = await parseJSONFile(filePath);
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid file format. Only CSV and JSON files are supported."
+      });
+    }
+
+    // Validate parsed problems
+    if (!problems || problems.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid problems found in the uploaded file."
+      });
+    }
+
+    // Check for duplicates before insertion
+    const titles = problems.map(p => p.title);
+    const slugs = titles.map(title => generateSlug(title));
+    
+    // Find existing problems with matching slugs
+    const existingProblems = await Problem.find(
+      { slug: { $in: slugs } },
+      { slug: 1, title: 1 }
+    );
+
+    const existingSlugsSet = new Set(existingProblems.map(p => p.slug));
+    
+    // Separate new problems from duplicates
+    const newProblems = [];
+    const duplicates = [];
+    
+    problems.forEach((problem, index) => {
+      const problemSlug = slugs[index];
+      if (existingSlugsSet.has(problemSlug)) {
+        duplicates.push({
+          title: problem.title,
+          reason: "Problem with this title already exists"
+        });
+      } else {
+        newProblems.push({
+          ...problem,
+          createdBy: req.user.id,
+          isActive: true
+        });
+      }
+    });
+
+    // Bulk insert new problems
+    const results = {
+      success: [],
+      failed: [],
+      duplicates: duplicates
+    };
+
+    if (newProblems.length > 0) {
+      try {
+        // Use insertMany with ordered: false to continue on errors
+        const insertedProblems = await Problem.insertMany(newProblems, { 
+          ordered: false,
+          rawResult: true 
+        });
+        
+        results.success = insertedProblems.insertedIds 
+          ? Object.values(insertedProblems.insertedIds).length 
+          : newProblems.length;
+      } catch (bulkError) {
+        // Handle partial insertion errors
+        if (bulkError.writeErrors) {
+          bulkError.writeErrors.forEach((err) => {
+            const failedProblem = newProblems[err.index];
+            results.failed.push({
+              title: failedProblem.title,
+              reason: err.errmsg || "Unknown error"
+            });
+          });
+          // Calculate successful insertions
+          results.success = newProblems.length - bulkError.writeErrors.length;
+        } else {
+          throw bulkError;
+        }
+      }
+    }
+
+    // Clean up uploaded file
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Prepare response
+    const totalProcessed = problems.length;
+    const successCount = typeof results.success === 'number' ? results.success : results.success.length;
+    
+    res.status(200).json({
+      success: true,
+      message: `Bulk upload completed. ${successCount} problems added successfully.`,
+      summary: {
+        totalProcessed,
+        successful: successCount,
+        duplicates: results.duplicates.length,
+        failed: results.failed.length
+      },
+      details: {
+        duplicates: results.duplicates.slice(0, 20), // Limit to first 20
+        failed: results.failed.slice(0, 20) // Limit to first 20
+      }
+    });
+
+  } catch (error) {
+    console.error("Bulk upload error:", error);
+    
+    // Clean up file on error
+    if (filePath && fs.existsSync(filePath)) {
+      try {
+        fs.unlinkSync(filePath);
+      } catch (cleanupError) {
+        console.error("File cleanup error:", cleanupError);
+      }
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Error processing bulk upload",
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Helper function to parse CSV file
+ */
+async function parseCSVFile(filePath) {
+  return new Promise((resolve, reject) => {
+    const problems = [];
+    
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on('data', (row) => {
+        try {
+          // Parse CSV row into problem object
+          const problem = {
+            title: row.title?.trim(),
+            description: row.description?.trim(),
+            difficulty: row.difficulty?.trim() || 'Medium',
+            topics: row.topics ? row.topics.split(',').map(t => t.trim()).filter(Boolean) : [],
+            companies: row.companies ? row.companies.split(',').map(c => c.trim()).filter(Boolean) : [],
+            constraints: row.constraints?.trim() || '',
+            inputFormat: row.inputFormat?.trim() || '',
+            outputFormat: row.outputFormat?.trim() || '',
+            hints: row.hints ? row.hints.split('|').map(h => h.trim()).filter(Boolean) : []
+          };
+
+          // Parse sample test cases if provided
+          const sampleTestCases = [];
+          let i = 1;
+          while (row[`sampleInput${i}`] || row[`sampleOutput${i}`]) {
+            if (row[`sampleInput${i}`] && row[`sampleOutput${i}`]) {
+              sampleTestCases.push({
+                input: row[`sampleInput${i}`].trim(),
+                output: row[`sampleOutput${i}`].trim(),
+                isHidden: false
+              });
+            }
+            i++;
+          }
+          
+          if (sampleTestCases.length > 0) {
+            problem.sampleTestCases = sampleTestCases;
+          }
+
+          // Validate required fields
+          if (problem.title && problem.description && problem.topics.length > 0) {
+            problems.push(problem);
+          }
+        } catch (error) {
+          console.error('Error parsing CSV row:', error);
+        }
+      })
+      .on('end', () => {
+        resolve(problems);
+      })
+      .on('error', (error) => {
+        reject(error);
+      });
+  });
+}
+
+/**
+ * Helper function to parse JSON file
+ */
+async function parseJSONFile(filePath) {
+  try {
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    const data = JSON.parse(fileContent);
+    
+    // Support both array format and {problems: []} format
+    const problemsArray = Array.isArray(data) ? data : data.problems;
+    
+    if (!Array.isArray(problemsArray)) {
+      throw new Error('Invalid JSON format. Expected an array of problems or {problems: [...]}');
+    }
+
+    // Validate and normalize each problem
+    return problemsArray
+      .filter(p => p.title && p.description && p.topics && p.topics.length > 0)
+      .map(p => ({
+        title: p.title.trim(),
+        description: p.description.trim(),
+        difficulty: p.difficulty || 'Medium',
+        topics: Array.isArray(p.topics) ? p.topics : [],
+        companies: Array.isArray(p.companies) ? p.companies : [],
+        constraints: p.constraints || '',
+        inputFormat: p.inputFormat || '',
+        outputFormat: p.outputFormat || '',
+        hints: Array.isArray(p.hints) ? p.hints : [],
+        sampleTestCases: Array.isArray(p.sampleTestCases) ? p.sampleTestCases : [],
+        hiddenTestCases: Array.isArray(p.hiddenTestCases) ? p.hiddenTestCases : [],
+        starterCode: p.starterCode || {},
+        solution: p.solution || {}
+      }));
+  } catch (error) {
+    throw new Error(`Error parsing JSON file: ${error.message}`);
+  }
+}
+
+/**
+ * Helper function to generate slug from title
+ */
+function generateSlug(title) {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
